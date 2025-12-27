@@ -2,6 +2,7 @@ package com.kobe.moamart.domain.product.entity;
 
 import com.kobe.moamart.domain.BaseTimeEntity;
 import com.kobe.moamart.domain.category.Category;
+import com.kobe.moamart.global.exception.NotEnoughStockException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -52,6 +53,9 @@ public class Product extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean isDisplayed;
 
+    // 재고 수량 필드 (기본값 0)
+    private int stockQuantity;
+
     // CascadeType.ALL: 상품 저장/삭제 시 이미지도 함께 저장/삭제
     // orphanRemoval = true 리스트에서 제거하면 DB에서도 삭제
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -94,4 +98,17 @@ public class Product extends BaseTimeEntity {
         image.assignProduct(this); // 양방향 연관관계 설정
     }
 
+    // 재고 감소 비즈니스 로직 추가
+    public void removeStock(int quantity) {
+        int restStock = this.stockQuantity - quantity;
+        if (restStock < 0) {
+            throw new NotEnoughStockException("재고가 부족합니다. (현재 재고: " + this.stockQuantity + ")");
+        }
+        this.stockQuantity = restStock;
+    }
+
+    // 재고 증가 로직 (주문 취소 시 필요)
+    public void addStock(int quantity) {
+        this.stockQuantity += quantity;
+    }
 }
