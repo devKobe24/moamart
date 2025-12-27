@@ -139,7 +139,11 @@
       </div>
 
       <div class="product-grid">
-        <div class="card" th:each="item : ${products.content}">
+        <a
+          th:href="@{/products/{id}(id=${item.id})}"
+          class="card"
+          th:each="item : ${products.content}"
+        >
           <img
             th:if="${item.thumbnailUrl != null}"
             th:src="${item.thumbnailUrl}"
@@ -175,7 +179,7 @@
               10,000원
             </div>
           </div>
-        </div>
+        </a>
       </div>
     </div>
   </body>

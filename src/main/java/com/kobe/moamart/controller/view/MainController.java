@@ -1,5 +1,6 @@
 package com.kobe.moamart.controller.view;
 
+import com.kobe.moamart.dto.response.ProductDetailResponse;
 import com.kobe.moamart.dto.response.ProductListResponse;
 import com.kobe.moamart.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +10,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-
+import org.springframework.web.bind.annotation.PathVariable;
 
 
 /**
@@ -38,5 +39,15 @@ public class MainController {
         model.addAttribute("products", products);
 
         return "index"; // templates/index.html
+    }
+
+    /**
+     * 상품 상세 페이지
+     */
+    @GetMapping("/products/{id}")
+    public String productDetails(@PathVariable Long id, Model model) {
+        ProductDetailResponse product = productService.getProductDetail(id);
+        model.addAttribute("product", product);
+        return "product/detail"; // templates/product/detail.html
     }
 }

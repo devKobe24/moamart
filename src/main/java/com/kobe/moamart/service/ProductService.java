@@ -8,6 +8,7 @@ import com.kobe.moamart.domain.product.entity.ProductStatus;
 import com.kobe.moamart.domain.product.repository.ProductRepository;
 import com.kobe.moamart.dto.request.ProductSaveRequest;
 import com.kobe.moamart.dto.request.ProductSearchCondition;
+import com.kobe.moamart.dto.response.ProductDetailResponse;
 import com.kobe.moamart.dto.response.ProductListResponse;
 import com.kobe.moamart.global.util.FileUploader;
 import lombok.RequiredArgsConstructor;
@@ -114,5 +115,15 @@ public class ProductService {
     public Page<ProductListResponse> getMainPageProducts(Pageable pageable) {
         return productRepository.findAllByIsDisplayedTrueOrderByIdDesc(pageable)
                 .map(ProductListResponse::new);
+    }
+
+    /**
+     * 상품 상세 조회
+     */
+    public ProductDetailResponse getProductDetail(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + id));
+
+        return new ProductDetailResponse(product);
     }
 }
