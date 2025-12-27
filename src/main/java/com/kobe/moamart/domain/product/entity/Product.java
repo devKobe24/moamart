@@ -62,7 +62,7 @@ public class Product extends BaseTimeEntity {
     private List<ProductImage> images = new ArrayList<>();
 
     @Builder
-    public Product(Category category, String name, Long price, String description, String thumbnailUrl, ProductStatus status, boolean isDisplayed) {
+    public Product(Category category, String name, Long price, String description, String thumbnailUrl, ProductStatus status, boolean isDisplayed, int stockQuantity) {
         this.category = category;
         this.name = name;
         this.price = price;
@@ -70,6 +70,7 @@ public class Product extends BaseTimeEntity {
         this.thumbnailUrl = thumbnailUrl;
         this.status = status;
         this.isDisplayed = isDisplayed;
+        this.stockQuantity = stockQuantity;
     }
 
     // --- 비즈니스 로직 (Setter 대신 사용) ---

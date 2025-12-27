@@ -88,4 +88,11 @@ public class CartService {
         // 변경된 리스트를 세션에 다시 저장
         session.setAttribute(CART_SESSION_KEY, cart);
     }
+
+    /**
+     * 장바구니 비우기 (주문 완료 후 사용)
+     */
+    public void clearCart(HttpSession session) {
+        session.removeAttribute(CART_SESSION_KEY);
+    }
 }

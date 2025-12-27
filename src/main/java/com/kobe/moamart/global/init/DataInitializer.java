@@ -107,6 +107,7 @@ public class DataInitializer implements CommandLineRunner {
                 .status(status)
                 .isDisplayed(isDisplayed)
                 .thumbnailUrl(null)
+                .stockQuantity(100)
                 .build();
 
         productRepository.save(product);
