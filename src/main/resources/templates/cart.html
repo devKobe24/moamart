@@ -1,118 +1,262 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>장바구니 - Moamart</title>
     <style>
-        body { font-family: 'Apple SD Gothic Neo', sans-serif; background-color: #f8f9fa; margin: 0; }
+      body {
+        font-family: "Apple SD Gothic Neo", sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+      }
 
-        .navbar { background-color: white; padding: 15px 30px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-size: 24px; font-weight: bold; color: #333; text-decoration: none; }
+      .navbar {
+        background-color: white;
+        padding: 15px 30px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .logo {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+        text-decoration: none;
+      }
 
-        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
-        h1 { margin-bottom: 30px; color: #333; }
+      .container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+      h1 {
+        margin-bottom: 30px;
+        color: #333;
+      }
 
-        /* 테이블 스타일 */
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        th, td { padding: 15px; text-align: center; border-bottom: 1px solid #eee; vertical-align: middle; }
-        th { background-color: #f1f3f5; font-weight: bold; color: #555; }
+      /* 테이블 스타일 */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+      th,
+      td {
+        padding: 15px;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+      }
+      th {
+        background-color: #f1f3f5;
+        font-weight: bold;
+        color: #555;
+      }
 
-        /* 이미지 스타일 */
-        .cart-img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+      /* 이미지 스타일 */
+      .cart-img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
 
-        /* 총 결제 금액 영역 */
-        .total-section { margin-top: 30px; background: white; padding: 30px; border-radius: 8px; text-align: right; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .total-label { font-size: 18px; color: #555; margin-right: 20px; }
-        .total-price { font-size: 28px; font-weight: bold; color: #d32f2f; }
+      /* 총 결제 금액 영역 */
+      .total-section {
+        margin-top: 30px;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        text-align: right;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+      .total-label {
+        font-size: 18px;
+        color: #555;
+        margin-right: 20px;
+      }
+      .total-price {
+        font-size: 28px;
+        font-weight: bold;
+        color: #d32f2f;
+      }
 
-        /* 버튼 */
-        .btn { padding: 10px 20px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; transition: 0.2s; }
-        .btn-delete { background-color: #fff; border: 1px solid #ddd; color: #666; }
-        .btn-delete:hover { background-color: #f8f9fa; color: #d32f2f; border-color: #d32f2f; }
+      /* 버튼 */
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .btn-delete {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        color: #666;
+      }
+      .btn-delete:hover {
+        background-color: #f8f9fa;
+        color: #d32f2f;
+        border-color: #d32f2f;
+      }
 
-        .btn-checkout { background-color: #007bff; color: white; padding: 15px 40px; font-size: 18px; font-weight: bold; margin-top: 20px; }
-        .btn-checkout:hover { background-color: #0056b3; }
+      .btn-checkout {
+        background-color: #007bff;
+        color: white;
+        padding: 15px 40px;
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 20px;
+      }
+      .btn-checkout:hover {
+        background-color: #0056b3;
+      }
 
-        /* 장바구니 비었을 때 */
-        .empty-cart { text-align: center; padding: 80px 0; color: #888; }
-        .btn-home { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; }
+      /* 장바구니 비었을 때 */
+      .empty-cart {
+        text-align: center;
+        padding: 80px 0;
+        color: #888;
+      }
+      .btn-home {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 10px 20px;
+        background-color: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <div class="navbar">
+      <a href="/" class="logo">🛍️ Moamart</a>
+      <div>
+        <a href="/" style="text-decoration: none; color: #555">계속 쇼핑하기</a>
+      </div>
+    </div>
 
-<div class="navbar">
-    <a href="/" class="logo">🛍️ Moamart</a>
-    <div><a href="/" style="text-decoration: none; color: #555;">계속 쇼핑하기</a></div>
-</div>
+    <div class="container">
+      <h1>🛒 장바구니</h1>
 
-<div class="container">
-    <h1>🛒 장바구니</h1>
-
-    <div th:if="${cart.isEmpty()}" class="empty-cart">
+      <div th:if="${cart.isEmpty()}" class="empty-cart">
         <h2>장바구니가 비어있습니다.</h2>
         <p>원하는 상품을 담아보세요!</p>
         <a href="/" class="btn-home">상품 보러가기</a>
-    </div>
+      </div>
 
-    <div th:unless="${cart.isEmpty()}">
+      <div th:unless="${cart.isEmpty()}">
         <table>
-            <thead>
+          <thead>
             <tr>
-                <th style="width: 10%">이미지</th>
-                <th style="width: 40%">상품명</th>
-                <th style="width: 15%">단가</th>
-                <th style="width: 10%">수량</th>
-                <th style="width: 15%">금액</th>
-                <th style="width: 10%">관리</th>
+              <th style="width: 10%">이미지</th>
+              <th style="width: 40%">상품명</th>
+              <th style="width: 15%">단가</th>
+              <th style="width: 10%">수량</th>
+              <th style="width: 15%">금액</th>
+              <th style="width: 10%">관리</th>
             </tr>
-            </thead>
-            <tbody>
+          </thead>
+          <tbody>
             <tr th:each="item : ${cart}">
-                <td>
-                    <img th:if="${item.thumbnailUrl != null}" th:src="${item.thumbnailUrl}" class="cart-img">
-                    <div th:unless="${item.thumbnailUrl != null}" style="width:60px; height:60px; background:#eee; margin:0 auto; display:flex; align-items:center; justify-content:center; border-radius:4px; font-size:10px;">No Img</div>
-                </td>
-                <td th:text="${item.name}" style="text-align: left; padding-left: 20px; font-weight: bold;">상품명</td>
-                <td th:text="${#numbers.formatInteger(item.price, 0, 'COMMA')} + '원'">10,000원</td>
-                <td th:text="${item.quantity} + '개'">1개</td>
-                <td th:text="${#numbers.formatInteger(item.getTotalPrice(), 0, 'COMMA')} + '원'" style="font-weight: bold;">10,000원</td>
-                <td>
-                    <button class="btn btn-delete" th:onclick="'deleteItem(' + ${item.productId} + ')'">삭제</button>
-                </td>
+              <td>
+                <img
+                  th:if="${item.thumbnailUrl != null}"
+                  th:src="${item.thumbnailUrl}"
+                  class="cart-img"
+                />
+                <div
+                  th:unless="${item.thumbnailUrl != null}"
+                  style="
+                    width: 60px;
+                    height: 60px;
+                    background: #eee;
+                    margin: 0 auto;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+                    font-size: 10px;
+                  "
+                >
+                  No Img
+                </div>
+              </td>
+              <td
+                th:text="${item.name}"
+                style="text-align: left; padding-left: 20px; font-weight: bold"
+              >
+                상품명
+              </td>
+              <td
+                th:text="${#numbers.formatInteger(item.price, 0, 'COMMA')} + '원'"
+              >
+                10,000원
+              </td>
+              <td th:text="${item.quantity} + '개'">1개</td>
+              <td
+                th:text="${#numbers.formatInteger(item.getTotalPrice(), 0, 'COMMA')} + '원'"
+                style="font-weight: bold"
+              >
+                10,000원
+              </td>
+              <td>
+                <button
+                  class="btn btn-delete"
+                  th:onclick="'deleteItem(' + ${item.productId} + ')'"
+                >
+                  삭제
+                </button>
+              </td>
             </tr>
-            </tbody>
+          </tbody>
         </table>
 
         <div class="total-section">
-            <span class="total-label">총 결제 금액</span>
-            <span class="total-price" th:text="${#numbers.formatInteger(totalPrice, 0, 'COMMA')} + '원'">0원</span>
-            <br>
-            <button class="btn btn-checkout" onclick="alert('결제 기능은 다음 단계입니다!')">주문하기</button>
+          <span class="total-label">총 결제 금액</span>
+          <span
+            class="total-price"
+            th:text="${#numbers.formatInteger(totalPrice, 0, 'COMMA')} + '원'"
+            >0원</span
+          >
+          <br />
+          <button
+            class="btn btn-checkout"
+            onclick="location.href='/orders/checkout'"
+          >
+            주문하기
+          </button>
         </div>
+      </div>
     </div>
-</div>
 
-<script>
-    function deleteItem(productId) {
+    <script>
+      function deleteItem(productId) {
         if (!confirm("해당 상품을 장바구니에서 삭제하시겠습니까?")) return;
 
         fetch(`/api/cart/${productId}`, {
-            method: 'DELETE',
+          method: "DELETE",
         })
-            .then(response => {
-                if (response.ok) {
-                    // 성공 시 화면 새로고침하여 목록 갱신
-                    location.reload();
-                } else {
-                    alert("삭제 실패했습니다.");
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert("시스템 오류가 발생했습니다.");
-            });
-    }
-</script>
-
-</body>
+          .then((response) => {
+            if (response.ok) {
+              // 성공 시 화면 새로고침하여 목록 갱신
+              location.reload();
+            } else {
+              alert("삭제 실패했습니다.");
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("시스템 오류가 발생했습니다.");
+          });
+      }
+    </script>
+  </body>
 </html>
