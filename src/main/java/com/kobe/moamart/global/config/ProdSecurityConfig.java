@@ -1,5 +1,7 @@
 package com.kobe.moamart.global.config;
 
+import com.kobe.moamart.global.security.CustomUserDetailsService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -21,7 +23,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 @Profile("prod")
+@RequiredArgsConstructor
 public class ProdSecurityConfig {
+
+    private final CustomUserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -34,9 +39,11 @@ public class ProdSecurityConfig {
                 // 3. 권한 제어 (Whitelist 방식)
                 .authorizeHttpRequests(auth -> auth
                         // 정적 리소스 허용
-                        .requestMatchers("/css/**", "js/**", "/images/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
+                        // 로그인 페이지는 누구나 접근 가능
+                        .requestMatchers("/admin/login").permitAll()
                         // 메인 페이지 및 상품 상세는 누구나 접근 가능
-                        .requestMatchers("/", "/products/**").permitAll()
+                        .requestMatchers("/", "/products/**", "/cart", "/orders/**").permitAll()
                         // 관리자 페이지는 ADMIN 권한 필요
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         // 나머지는 인증 필요
@@ -47,12 +54,17 @@ public class ProdSecurityConfig {
                 .formLogin(login -> login
                         .loginPage("/admin/login") // 커스텀 로그인 페이지
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/admin/dashboard", true)
+                        .defaultSuccessUrl("/admin/products", true) // 로그인 성공 후 관리자 상품 목록으로
+                        .failureUrl("/admin/login?error=true") // 로그인 실패 시
                         .permitAll()
                 )
                 .logout(logout -> logout
+                        .logoutUrl("/logout")
                         .logoutSuccessUrl("/")
-                );
+                        .permitAll()
+                )
+                // 5. UserDetailsService 설정
+                .userDetailsService(userDetailsService);
 
         return http.build();
     }

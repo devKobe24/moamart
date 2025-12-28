@@ -1,5 +1,7 @@
 package com.kobe.moamart.global.config;
 
+import com.kobe.moamart.global.security.CustomUserDetailsService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -7,7 +9,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * packageName    : com.kobe.moamart.global.config
@@ -23,7 +24,10 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @Configuration
 @EnableWebSecurity
 @Profile("dev") // application.yml의 active: dev 일 때만 동작
+@RequiredArgsConstructor
 public class DevSecurityConfig {
+
+    private final CustomUserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -34,10 +38,36 @@ public class DevSecurityConfig {
                 // 2. H2 Console 허용 (iframe)
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
 
-                // 3. 모든 요청 허용 (로그인 없이 개발 가능)
+                // 3. 권한 제어
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(new AntPathRequestMatcher("/**")).permitAll()
-                );
+                        // 정적 리소스 허용
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico", "/h2-console/**").permitAll()
+                        // 로그인 페이지는 누구나 접근 가능
+                        .requestMatchers("/admin/login").permitAll()
+                        // 메인 페이지 및 상품 상세는 누구나 접근 가능
+                        .requestMatchers("/", "/products/**", "/cart", "/orders/**").permitAll()
+                        // 관리자 페이지는 ADMIN 권한 필요
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // 나머지는 인증 필요
+                        .anyRequest().authenticated()
+                )
+
+                // 4. 로그인 폼 설정
+                .formLogin(login -> login
+                        .loginPage("/admin/login") // 커스텀 로그인 페이지
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/admin/products", true) // 로그인 성공 후 관리자 상품 목록으로
+                        .failureUrl("/admin/login?error=true") // 로그인 실패 시
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/")
+                        .permitAll()
+                )
+                // 5. UserDetailsService 설정
+                .userDetailsService(userDetailsService);
+
         return http.build();
     }
 }
