@@ -84,6 +84,7 @@ public class ProductService {
                 .description(request.getDescription())
                 .thumbnailUrl(thumbnailUrl)
                 .isDisplayed(true)
+                .isNew(request.getIsNew() != null ? request.getIsNew() : false)
                 .stockQuantity(request.getStockQuantity() != null ? request.getStockQuantity() : 0)
                 .build();
 
@@ -111,9 +112,22 @@ public class ProductService {
     }
 
     /**
-     * 메인 페이지 상품 조회 (노출 가능한 상품만)
+     * 메인 페이지 최신 상품 조회 (isNew가 true인 상품만)
      */
-    public Page<ProductListResponse> getMainPageProducts(Long categoryId, Pageable pageable) {
+    public Page<ProductListResponse> getNewProducts(Long categoryId, Pageable pageable) {
+        if (categoryId != null) {
+            return productRepository.findByCategoryIdAndIsDisplayedTrueAndIsNewTrueOrderByIdDesc(categoryId, pageable)
+                    .map(ProductListResponse::new);
+        } else {
+            return productRepository.findAllByIsDisplayedTrueAndIsNewTrueOrderByIdDesc(pageable)
+                    .map(ProductListResponse::new);
+        }
+    }
+
+    /**
+     * 메인 페이지 전체 상품 조회 (isDisplayed가 true인 모든 상품)
+     */
+    public Page<ProductListResponse> getAllProducts(Long categoryId, Pageable pageable) {
         if (categoryId != null) {
             return productRepository.findByCategoryIdAndIsDisplayedTrueOrderByIdDesc(categoryId, pageable)
                     .map(ProductListResponse::new);
@@ -147,6 +161,7 @@ public class ProductService {
         request.setStatus(product.getStatus());
         request.setDescription(product.getDescription());
         request.setStockQuantity(product.getStockQuantity());
+        request.setIsNew(product.isNew());
 
         return request;
     }
@@ -172,13 +187,16 @@ public class ProductService {
                 product.isDisplayed() // isDisplayed는 수정 폼에 없으므로 기존 값 유지
         );
 
-        // 4. 카테고리, 상태, 재고 수정
+        // 4. 카테고리, 상태, 재고, 최신 상품 여부 수정
         product.changeCategory(category);
         if (request.getStatus() != null) {
             product.changeStatus(request.getStatus());
         }
         if (request.getStockQuantity() != null) {
             product.changeStockQuantity(request.getStockQuantity());
+        }
+        if (request.getIsNew() != null) {
+            product.changeIsNew(request.getIsNew());
         }
 
         // 5. 대표 이미지 업로드 처리 (새 이미지가 있는 경우만)

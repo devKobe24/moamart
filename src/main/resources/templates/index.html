@@ -299,10 +299,65 @@
     </div>
 
     <div class="container">
+      <div class="section-title">✨ 최신 상품</div>
+
+      <div
+        th:if="${newProducts.isEmpty()}"
+        style="text-align: center; padding: 100px; color: #999"
+      >
+        등록된 최신 상품이 없습니다.
+      </div>
+
+      <div class="product-grid">
+        <a
+          th:href="@{/products/{id}(id=${item.id})}"
+          class="card"
+          th:each="item : ${newProducts.content}"
+        >
+          <img
+            th:if="${item.thumbnailUrl != null}"
+            th:src="${item.thumbnailUrl}"
+            class="card-img"
+          />
+          <div
+            th:unless="${item.thumbnailUrl != null}"
+            class="card-img"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #aaa;
+            "
+          >
+            No Image
+          </div>
+
+          <div
+            class="sold-out-badge"
+            th:if="${item.status.name() == 'SOLD_OUT'}"
+          >
+            품절
+          </div>
+
+          <div class="card-body">
+            <div class="category" th:text="${item.categoryName}">카테고리</div>
+            <div class="product-name" th:text="${item.name}">상품명</div>
+            <div
+              class="price"
+              th:text="${#numbers.formatInteger(item.price, 0, 'COMMA')} + '원'"
+            >
+              10,000원
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="container">
       <div class="section-title">✨ 전체 상품</div>
 
       <div
-        th:if="${products.isEmpty()}"
+        th:if="${allProducts.isEmpty()}"
         style="text-align: center; padding: 100px; color: #999"
       >
         등록된 상품이 없습니다. 관리자 페이지에서 상품을 등록해보세요!
@@ -312,7 +367,7 @@
         <a
           th:href="@{/products/{id}(id=${item.id})}"
           class="card"
-          th:each="item : ${products.content}"
+          th:each="item : ${allProducts.content}"
         >
           <img
             th:if="${item.thumbnailUrl != null}"

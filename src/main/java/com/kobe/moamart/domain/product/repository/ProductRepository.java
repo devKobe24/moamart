@@ -21,7 +21,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ProductRepository extends JpaRepository<Product, Long>, ProductRepositoryCustom {
     // 필요한 경우 간단한 메서드는 여기에 추가 (예: 상품명으로 정확히 찾기)
 
-    // 메인 페이지용: 노출(isDisplayed)이 true인 상품만 최신순으로 가져오기
+    // 메인 페이지용: 노출(isDisplayed)이 true이고 최신 상품(isNew)인 상품만 최신순으로 가져오기
+    Page<Product> findAllByIsDisplayedTrueAndIsNewTrueOrderByIdDesc(Pageable pageable);
+
+    // 메인 페이지용: 특정 카테고리의 노출 상품 중 최신 상품만 조회
+    Page<Product> findByCategoryIdAndIsDisplayedTrueAndIsNewTrueOrderByIdDesc(Long categoryId, Pageable pageable);
+
+    // 메인 페이지용: 노출(isDisplayed)이 true인 모든 상품을 최신순으로 가져오기
     Page<Product> findAllByIsDisplayedTrueOrderByIdDesc(Pageable pageable);
 
     // 메인 페이지용: 특정 카테고리의 노출 상품만 조회

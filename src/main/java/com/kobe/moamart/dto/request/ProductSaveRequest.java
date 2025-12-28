@@ -39,6 +39,9 @@ public class ProductSaveRequest {
     // 입고량 (재고 수량)
     private Integer stockQuantity;
 
+    // 최신 상품 여부
+    private Boolean isNew;
+
     // --- 파일 업로드 필드 ---
 
     // 대표 이미지 (필수 아님 - 없으면 기본 이미지)

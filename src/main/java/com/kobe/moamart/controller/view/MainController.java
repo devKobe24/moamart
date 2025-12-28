@@ -47,11 +47,15 @@ public class MainController {
                     .orElse(null);
         }
 
-        // 2. 노출 가능한 상품 조회 (카테고리 필터링 포함)
-        Page<ProductListResponse> products = productService.getMainPageProducts(categoryId, pageable);
+        // 2. 최신 상품 조회 (isNew=true인 상품만)
+        Page<ProductListResponse> newProducts = productService.getNewProducts(categoryId, pageable);
 
-        // 3. 모델에 담기
-        model.addAttribute("products", products);
+        // 3. 전체 상품 조회 (isDisplayed=true인 모든 상품)
+        Page<ProductListResponse> allProducts = productService.getAllProducts(categoryId, pageable);
+
+        // 4. 모델에 담기
+        model.addAttribute("newProducts", newProducts);
+        model.addAttribute("allProducts", allProducts);
         model.addAttribute("selectedCategory", category); // 선택된 카테고리 전달 (활성화 표시용)
 
         return "index"; // templates/index.html

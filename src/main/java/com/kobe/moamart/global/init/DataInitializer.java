@@ -94,6 +94,7 @@ public class DataInitializer implements CommandLineRunner {
                 .description(description)
                 .status(status)
                 .isDisplayed(isDisplayed)
+                .isNew(false) // 기본값은 false
                 .thumbnailUrl(null)
                 .stockQuantity(100)
                 .build();

@@ -53,6 +53,10 @@ public class Product extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean isDisplayed;
 
+    // 최신 상품 여부 (메인 페이지 최신 상품 섹션에 표시)
+    @Column(nullable = false)
+    private boolean isNew;
+
     // 재고 수량 필드 (기본값 0)
     private int stockQuantity;
 
@@ -62,7 +66,7 @@ public class Product extends BaseTimeEntity {
     private List<ProductImage> images = new ArrayList<>();
 
     @Builder
-    public Product(Category category, String name, Long price, String description, String thumbnailUrl, ProductStatus status, boolean isDisplayed, int stockQuantity) {
+    public Product(Category category, String name, Long price, String description, String thumbnailUrl, ProductStatus status, boolean isDisplayed, boolean isNew, int stockQuantity) {
         this.category = category;
         this.name = name;
         this.price = price;
@@ -70,6 +74,7 @@ public class Product extends BaseTimeEntity {
         this.thumbnailUrl = thumbnailUrl;
         this.status = status;
         this.isDisplayed = isDisplayed;
+        this.isNew = isNew;
         this.stockQuantity = stockQuantity;
     }
 
@@ -86,6 +91,11 @@ public class Product extends BaseTimeEntity {
         this.price = price;
         this.description = description;
         this.isDisplayed = isDisplayed;
+    }
+
+    // 최신 상품 여부 변경
+    public void changeIsNew(boolean isNew) {
+        this.isNew = isNew;
     }
 
     // 카테고리 변경
