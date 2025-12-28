@@ -113,9 +113,14 @@ public class ProductService {
     /**
      * 메인 페이지 상품 조회 (노출 가능한 상품만)
      */
-    public Page<ProductListResponse> getMainPageProducts(Pageable pageable) {
-        return productRepository.findAllByIsDisplayedTrueOrderByIdDesc(pageable)
-                .map(ProductListResponse::new);
+    public Page<ProductListResponse> getMainPageProducts(Long categoryId, Pageable pageable) {
+        if (categoryId != null) {
+            return productRepository.findByCategoryIdAndIsDisplayedTrueOrderByIdDesc(categoryId, pageable)
+                    .map(ProductListResponse::new);
+        } else {
+            return productRepository.findAllByIsDisplayedTrueOrderByIdDesc(pageable)
+                    .map(ProductListResponse::new);
+        }
     }
 
     /**

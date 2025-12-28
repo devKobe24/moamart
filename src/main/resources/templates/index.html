@@ -39,6 +39,46 @@
         color: #007bff;
       }
 
+      /* 카테고리 메뉴 */
+      .category-menu {
+        background-color: white;
+        padding: 15px 30px;
+        border-bottom: 1px solid #eee;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      .category-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .category-item {
+        padding: 8px 16px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 20px;
+        color: #495057;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+      .category-item:hover {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+      }
+      .category-item.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+        font-weight: bold;
+      }
+
       /* 메인 컨테이너 */
       .container {
         max-width: 1200px;
@@ -124,6 +164,137 @@
       <a href="/" class="logo">🛍️ Moamart</a>
       <div class="menu">
         <a href="/admin/login">관리자 로그인</a>
+      </div>
+    </div>
+
+    <div class="category-menu">
+      <div class="category-list">
+        <a
+          href="/"
+          class="category-item"
+          th:classappend="${selectedCategory == null} ? 'active' : ''"
+          >전체</a
+        >
+        <a
+          href="/?category=주류"
+          class="category-item"
+          th:classappend="${selectedCategory == '주류'} ? 'active' : ''"
+          >주류</a
+        >
+        <a
+          href="/?category=정육"
+          class="category-item"
+          th:classappend="${selectedCategory == '정육'} ? 'active' : ''"
+          >정육</a
+        >
+        <a
+          href="/?category=채소"
+          class="category-item"
+          th:classappend="${selectedCategory == '채소'} ? 'active' : ''"
+          >채소</a
+        >
+        <a
+          th:href="@{/(category='빵 • 잼')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '빵 • 잼'} ? 'active' : ''"
+          >빵 • 잼</a
+        >
+        <a
+          th:href="@{/(category='우유 • 유제품')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '우유 • 유제품'} ? 'active' : ''"
+          >우유 • 유제품</a
+        >
+        <a
+          href="/?category=아이스크림"
+          class="category-item"
+          th:classappend="${selectedCategory == '아이스크림'} ? 'active' : ''"
+          >아이스크림</a
+        >
+        <a
+          th:href="@{/(category='음료 • 커피 • 생수')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '음료 • 커피 • 생수'} ? 'active' : ''"
+          >음료 • 커피 • 생수</a
+        >
+        <a
+          th:href="@{/(category='라면 • 면')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '라면 • 면'} ? 'active' : ''"
+          >라면 • 면</a
+        >
+        <a
+          th:href="@{/(category='세제 • 방향 • 탈취')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '세제 • 방향 • 탈취'} ? 'active' : ''"
+          >세제 • 방향 • 탈취</a
+        >
+        <a
+          th:href="@{/(category='청소 • 욕실')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '청소 • 욕실'} ? 'active' : ''"
+          >청소 • 욕실</a
+        >
+        <a
+          href="/?category=즉석 밥"
+          class="category-item"
+          th:classappend="${selectedCategory == '즉석 밥'} ? 'active' : ''"
+          >즉석 밥</a
+        >
+        <a
+          th:href="@{/(category='쌀 • 잡곡 • 견과')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '쌀 • 잡곡 • 견과'} ? 'active' : ''"
+          >쌀 • 잡곡 • 견과</a
+        >
+        <a
+          th:href="@{/(category='햄 • 어묵 • 통조림')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '햄 • 어묵 • 통조림'} ? 'active' : ''"
+          >햄 • 어묵 • 통조림</a
+        >
+        <a
+          th:href="@{/(category='양념 • 장류 • 오일')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '양념 • 장류 • 오일'} ? 'active' : ''"
+          >양념 • 장류 • 오일</a
+        >
+        <a
+          th:href="@{/(category='요리 • 반찬')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '요리 • 반찬'} ? 'active' : ''"
+          >요리 • 반찬</a
+        >
+        <a
+          th:href="@{/(category='헤어 • 바디 • 쉐이빙')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '헤어 • 바디 • 쉐이빙'} ? 'active' : ''"
+          >헤어 • 바디 • 쉐이빙</a
+        >
+        <a
+          th:href="@{/(category='화장지 • 생리대')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '화장지 • 생리대'} ? 'active' : ''"
+          >화장지 • 생리대</a
+        >
+        <a
+          th:href="@{/(category='주방 • 일회용품')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '주방 • 일회용품'} ? 'active' : ''"
+          >주방 • 일회용품</a
+        >
+        <a
+          th:href="@{/(category='뷰티 • 클렌징')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '뷰티 • 클렌징'} ? 'active' : ''"
+          >뷰티 • 클렌징</a
+        >
+        <a
+          th:href="@{/(category='문구 • 사무용품')}"
+          class="category-item"
+          th:classappend="${selectedCategory == '문구 • 사무용품'} ? 'active' : ''"
+          >문구 • 사무용품</a
+        >
       </div>
     </div>
 

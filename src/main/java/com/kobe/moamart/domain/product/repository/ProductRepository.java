@@ -23,4 +23,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, Product
 
     // 메인 페이지용: 노출(isDisplayed)이 true인 상품만 최신순으로 가져오기
     Page<Product> findAllByIsDisplayedTrueOrderByIdDesc(Pageable pageable);
+
+    // 메인 페이지용: 특정 카테고리의 노출 상품만 조회
+    Page<Product> findByCategoryIdAndIsDisplayedTrueOrderByIdDesc(Long categoryId, Pageable pageable);
 }

@@ -1,5 +1,6 @@
 package com.kobe.moamart.controller.view;
 
+import com.kobe.moamart.domain.category.CategoryRepository;
 import com.kobe.moamart.dto.response.ProductDetailResponse;
 import com.kobe.moamart.dto.response.ProductListResponse;
 import com.kobe.moamart.service.ProductService;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 
 /**
@@ -29,14 +31,28 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class MainController {
 
     private final ProductService productService;
+    private final CategoryRepository categoryRepository;
 
     @GetMapping("/")
-    public String home(@PageableDefault(size = 12) Pageable pageable, Model model) {
-        // 1. 노출 가능한 상품 조회
-        Page<ProductListResponse> products = productService.getMainPageProducts(pageable);
+    public String home(
+            @RequestParam(required = false) String category,
+            @PageableDefault(size = 12) Pageable pageable,
+            Model model
+    ) {
+        // 1. 카테고리 이름으로 카테고리 ID 조회
+        Long categoryId = null;
+        if (category != null && !category.isEmpty()) {
+            categoryId = categoryRepository.findByName(category)
+                    .map(cat -> cat.getId())
+                    .orElse(null);
+        }
 
-        // 2. 모델에 담기
+        // 2. 노출 가능한 상품 조회 (카테고리 필터링 포함)
+        Page<ProductListResponse> products = productService.getMainPageProducts(categoryId, pageable);
+
+        // 3. 모델에 담기
         model.addAttribute("products", products);
+        model.addAttribute("selectedCategory", category); // 선택된 카테고리 전달 (활성화 표시용)
 
         return "index"; // templates/index.html
     }

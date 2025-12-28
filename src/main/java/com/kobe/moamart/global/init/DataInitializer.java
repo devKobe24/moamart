@@ -60,33 +60,21 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initCategoryAndProduct() {
-        // --- 대분류 ---
-        Category dairyProducts = createCategory("유제품", 1, 1, null);
-        Category snack = createCategory("과자", 1, 1, null);
-        Category cannedFood = createCategory("통조림", 1, 1, null);
+        // --- 대분류 카테고리 생성 (텍스트 파일 기준) ---
+        String[] categoryNames = {
+            "주류", "정육", "채소", "빵 • 잼", "우유 • 유제품",
+            "아이스크림", "음료 • 커피 • 생수", "라면 • 면", "세제 • 방향 • 탈취",
+            "청소 • 욕실", "즉석 밥", "쌀 • 잡곡 • 견과", "햄 • 어묵 • 통조림",
+            "양념 • 장류 • 오일", "요리 • 반찬", "헤어 • 바디 • 쉐이빙",
+            "화장지 • 생리대", "주방 • 일회용품", "뷰티 • 클렌징", "문구 • 사무용품"
+        };
 
-        categoryRepository.save(dairyProducts);
-        categoryRepository.save(snack);
-        categoryRepository.save(cannedFood);
+        for (int i = 0; i < categoryNames.length; i++) {
+            Category category = createCategory(categoryNames[i], 1, i + 1, null);
+            categoryRepository.save(category);
+        }
 
-        // --- 소분류 (유제품) ---
-        Category milk = createCategory("우유", 2, 1, dairyProducts);
-        Category cheese = createCategory("치즈", 2, 2, dairyProducts);
-        categoryRepository.save(milk);
-        categoryRepository.save(cheese);
-
-        // --- 소분류 (패션) ---
-        Category shrimpSnack = createCategory("새우맛 과자", 2, 1, snack);
-        Category potatoChips = createCategory("감자칩", 2, 2, snack);
-        categoryRepository.save(shrimpSnack);
-        categoryRepository.save(potatoChips);
-
-        // --- 상품 데이터 (Dummy) ---
-        createProduct(milk, "서울 유우 500ML", 1900L, "1등급 받아 고소한 흰 우유",true ,ProductStatus.SELL);
-        createProduct(milk, "덴마크 소화가 잘되는 우유 900ml", 3880L, "1A등급 전용목장 원유로 만든 소화가 잘되는 우유", true, ProductStatus.SELL);
-        createProduct(cheese, "서울우유 체다치즈", 4870L, "한국인이 사랑하는 맛", true ,ProductStatus.SOLD_OUT);
-        createProduct(shrimpSnack, "매운 새우깡", 1180L, "생새우로 만든 매운 새우깡", true, ProductStatus.SELL);
-        createProduct(potatoChips, "프링글스 캐리비안식 치킨맛 100g", 3330L, "로컬의 맛을 통째로 쌓아 올렸닭", true, ProductStatus.STOP); // 판매중지 테스트
+        // 기존 상품 데이터는 제거 (필요시 나중에 추가)
     }
 
     private Category createCategory(String name, int depth, int order, Category parent) {
