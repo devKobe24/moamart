@@ -36,6 +36,9 @@ public class ProductSaveRequest {
 
     private String description;
 
+    // 입고량 (재고 수량)
+    private Integer stockQuantity;
+
     // --- 파일 업로드 필드 ---
 
     // 대표 이미지 (필수 아님 - 없으면 기본 이미지)

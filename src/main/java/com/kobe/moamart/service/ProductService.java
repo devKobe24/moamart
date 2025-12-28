@@ -84,6 +84,7 @@ public class ProductService {
                 .description(request.getDescription())
                 .thumbnailUrl(thumbnailUrl)
                 .isDisplayed(true)
+                .stockQuantity(request.getStockQuantity() != null ? request.getStockQuantity() : 0)
                 .build();
 
         // 4. 상세 이미지들 업로드 및 연관관계 설정
