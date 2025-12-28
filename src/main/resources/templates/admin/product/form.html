@@ -127,10 +127,10 @@
   </head>
   <body>
     <div class="container">
-      <h1>✨ 상품 등록</h1>
+      <h1 th:text="${productId != null ? '✏️ 상품 수정' : '✨ 상품 등록'}">✨ 상품 등록</h1>
 
       <form
-        th:action="@{/admin/products/add}"
+        th:action="${productId != null ? '/admin/products/' + productId + '/edit' : '/admin/products/add'}"
         th:object="${product}"
         method="post"
         enctype="multipart/form-data"

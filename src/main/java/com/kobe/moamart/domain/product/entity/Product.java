@@ -88,6 +88,16 @@ public class Product extends BaseTimeEntity {
         this.isDisplayed = isDisplayed;
     }
 
+    // 카테고리 변경
+    public void changeCategory(Category category) {
+        this.category = category;
+    }
+
+    // 재고 수량 변경
+    public void changeStockQuantity(int stockQuantity) {
+        this.stockQuantity = stockQuantity;
+    }
+
     // 대표 이미지 변경
     public void changeThumbnail(String url) {
         this.thumbnailUrl = url;

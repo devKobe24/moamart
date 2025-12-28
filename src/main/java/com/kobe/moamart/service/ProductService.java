@@ -127,4 +127,78 @@ public class ProductService {
 
         return new ProductDetailResponse(product);
     }
+
+    /**
+     * 상품 수정을 위한 조회 (ProductSaveRequest 반환)
+     */
+    public ProductSaveRequest getProductForEdit(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + id));
+
+        ProductSaveRequest request = new ProductSaveRequest();
+        request.setCategoryId(product.getCategory().getId());
+        request.setName(product.getName());
+        request.setPrice(product.getPrice());
+        request.setStatus(product.getStatus());
+        request.setDescription(product.getDescription());
+        request.setStockQuantity(product.getStockQuantity());
+
+        return request;
+    }
+
+    /**
+     * 상품 수정 (이미지 업로드 포함)
+     */
+    @Transactional
+    public void updateProduct(Long id, ProductSaveRequest request) {
+        // 1. 기존 상품 조회
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + id));
+
+        // 2. 카테고리 조회
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+
+        // 3. 기본 정보 수정
+        product.updateInfo(
+                request.getName(),
+                request.getPrice(),
+                request.getDescription(),
+                product.isDisplayed() // isDisplayed는 수정 폼에 없으므로 기존 값 유지
+        );
+
+        // 4. 카테고리, 상태, 재고 수정
+        product.changeCategory(category);
+        if (request.getStatus() != null) {
+            product.changeStatus(request.getStatus());
+        }
+        if (request.getStockQuantity() != null) {
+            product.changeStockQuantity(request.getStockQuantity());
+        }
+
+        // 5. 대표 이미지 업로드 처리 (새 이미지가 있는 경우만)
+        if (request.getThumbnailImage() != null && !request.getThumbnailImage().isEmpty()) {
+            String thumbnailUrl = fileUploader.upload(request.getThumbnailImage());
+            product.changeThumbnail(thumbnailUrl);
+        }
+
+        // 6. 새로운 상세 이미지 추가 (있는 경우만)
+        if (request.getProductImages() != null) {
+            for (MultipartFile file : request.getProductImages()) {
+                if (!file.isEmpty()) {
+                    String uploadUrl = fileUploader.upload(file);
+
+                    ProductImage image = ProductImage.builder()
+                            .url(uploadUrl)
+                            .isThumbnail(false)
+                            .displayOrder(0)
+                            .build();
+
+                    product.addImage(image);
+                }
+            }
+        }
+
+        // @Transactional에 의해 자동으로 업데이트됨 (명시적으로 save 호출 불필요)
+    }
 }

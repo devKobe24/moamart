@@ -1,7 +1,6 @@
 package com.kobe.moamart.controller.view.admin;
 
 import com.kobe.moamart.domain.category.CategoryRepository;
-import com.kobe.moamart.domain.product.entity.Product;
 import com.kobe.moamart.domain.product.entity.ProductStatus;
 import com.kobe.moamart.dto.request.ProductSaveRequest;
 import com.kobe.moamart.dto.request.ProductSearchCondition;
@@ -17,6 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -89,6 +89,48 @@ public class AdminProductViewController {
 
        // 저장 로직 수행
         productService.saveProduct(request);
+
+       // 목록 페이지로 리다이렉트 (PRG 패턴)
+        return "redirect:/admin/products";
+    }
+
+    /**
+     * 상품 수정 폼 화면 이동
+     */
+    @GetMapping("/{id}/edit")
+    public String editForm(@PathVariable Long id, Model model) {
+        // 서비스에서 ProductSaveRequest로 변환된 객체 조회
+        ProductSaveRequest request = productService.getProductForEdit(id);
+        
+        model.addAttribute("product", request);
+        model.addAttribute("productId", id); // 수정 모드 구분용
+        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("statuses", ProductStatus.values());
+
+        return "admin/product/form"; // templates/admin/product/form.html (등록과 동일한 폼 사용)
+    }
+
+    /**
+     * 상품 수정 처리
+     */
+    @PostMapping("/{id}/edit")
+    public String updateProduct(
+            @PathVariable Long id,
+            @Valid
+            @ModelAttribute("product") ProductSaveRequest request,
+            BindingResult bindingResult,
+            Model model
+    ) {
+       // 유효성 검사 실패 시 다시 폼으로 이동
+       if (bindingResult.hasErrors()) {
+           model.addAttribute("productId", id);
+           model.addAttribute("categories", categoryRepository.findAll());
+           model.addAttribute("statuses", ProductStatus.values());
+           return "admin/product/form";
+       }
+
+       // 수정 로직 수행
+        productService.updateProduct(id, request);
 
        // 목록 페이지로 리다이렉트 (PRG 패턴)
         return "redirect:/admin/products";
