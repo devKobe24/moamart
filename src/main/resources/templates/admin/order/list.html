@@ -158,9 +158,19 @@
             </td>
 
             <td>
-              <button onclick="alert('상세보기는 아직 구현 중입니다!')">
-                상세
-              </button>
+              <a
+                th:href="@{/admin/orders/{id}(id=${order.id})}"
+                style="
+                  display: inline-block;
+                  padding: 4px 8px;
+                  border: 1px solid #ddd;
+                  border-radius: 4px;
+                  text-decoration: none;
+                  color: #333;
+                  font-size: 12px;
+                "
+                >상세</a
+              >
             </td>
           </tr>
         </tbody>

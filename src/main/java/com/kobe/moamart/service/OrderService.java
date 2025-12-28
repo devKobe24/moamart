@@ -7,6 +7,7 @@ import com.kobe.moamart.domain.order.repository.OrderRepository;
 import com.kobe.moamart.domain.product.entity.Product;
 import com.kobe.moamart.domain.product.repository.ProductRepository;
 import com.kobe.moamart.dto.cart.CartItem;
+import com.kobe.moamart.dto.response.AdminOrderDetailResponse;
 import com.kobe.moamart.dto.response.OrderListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -81,5 +82,14 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
         order.changeStatus(status);
+    }
+
+    /**
+     * 관리자용: 주문 상세 조회
+     */
+    public AdminOrderDetailResponse getOrderDetail(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
+        return new AdminOrderDetailResponse(order);
     }
 }

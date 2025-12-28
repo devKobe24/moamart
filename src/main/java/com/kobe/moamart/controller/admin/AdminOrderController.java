@@ -1,6 +1,7 @@
 package com.kobe.moamart.controller.admin;
 
 import com.kobe.moamart.domain.order.entity.OrderStatus;
+import com.kobe.moamart.dto.response.AdminOrderDetailResponse;
 import com.kobe.moamart.dto.response.OrderListResponse;
 import com.kobe.moamart.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -52,5 +53,15 @@ public class AdminOrderController {
         orderService.updateOrderStatus(id, newStatus);
 
         return ResponseEntity.ok("상태가 변경되었습니다.");
+    }
+
+    /**
+     * 주문 상세 페이지
+     */
+    @GetMapping("/{id}")
+    public String detail(@PathVariable Long id, Model model) {
+        AdminOrderDetailResponse order = orderService.getOrderDetail(id);
+        model.addAttribute("order", order);
+        return "admin/order/detail"; // templates/admin/order/detail.html
     }
 }
