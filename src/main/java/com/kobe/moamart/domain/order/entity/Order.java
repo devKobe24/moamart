@@ -74,4 +74,9 @@ public class Order extends BaseTimeEntity {
                 .mapToInt(OrderItem::getOrderPrice)
                 .sum();
     }
+
+    // 상태 변경 비즈니스로직
+    public void changeStatus(OrderStatus status) {
+        this.status = status;
+    }
 }

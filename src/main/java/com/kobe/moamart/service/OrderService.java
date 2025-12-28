@@ -2,16 +2,20 @@ package com.kobe.moamart.service;
 
 import com.kobe.moamart.domain.order.entity.Order;
 import com.kobe.moamart.domain.order.entity.OrderItem;
+import com.kobe.moamart.domain.order.entity.OrderStatus;
 import com.kobe.moamart.domain.order.repository.OrderRepository;
 import com.kobe.moamart.domain.product.entity.Product;
 import com.kobe.moamart.domain.product.repository.ProductRepository;
 import com.kobe.moamart.dto.cart.CartItem;
+import com.kobe.moamart.dto.response.OrderListResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * packageName    : com.kobe.moamart.service
@@ -58,5 +62,24 @@ public class OrderService {
         orderRepository.save(order);
 
         return order.getId();
+    }
+
+    /**
+     * 관리자용: 전체 주문 조회 (최신순)
+     */
+    public List<OrderListResponse> getOrderList() {
+        return orderRepository.findAll(Sort.by(Sort.Direction.DESC, "id")).stream()
+                .map(OrderListResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 관리자용: 주문 상태 변경
+     */
+    @Transactional
+    public void updateOrderStatus(Long orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
+        order.changeStatus(status);
     }
 }
