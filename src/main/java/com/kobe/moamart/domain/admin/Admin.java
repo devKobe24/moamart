@@ -1,4 +1,4 @@
-package com.kobe.moamart.domain.member;
+package com.kobe.moamart.domain.admin;
 
 import com.kobe.moamart.domain.BaseTimeEntity;
 import com.kobe.moamart.domain.role.Role;
@@ -9,48 +9,40 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * packageName    : com.kobe.moamart.domain.member
- * fileName       : Member
+ * packageName    : com.kobe.moamart.domain.admin
+ * fileName       : Admin
  * author         : kobe
- * date           : 2025. 12. 26.
+ * date           : 2025. 12. 29.
  * description    :
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2025. 12. 26.        kobe       최초 생성
+ * 2025. 12. 29.        kobe       최초 생성
  */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-// 일부 DB(MySQL 등)에서 'member'는 예약어일 수 있으므로 테이블명을 명시하는 것이 안전합니다.
-@Table(name = "member")
-public class Member extends BaseTimeEntity {
+@Table(name = "admin")
+public class Admin extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "member_id")
+    @Column(name = "admin_id")
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String email; // 로그인 ID
+    private String username;
 
     @Column(nullable = false)
     private String password;
-
-    @Column(nullable = false)
-    private String name;
-
-    private String address;
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
     @Builder
-    public Member(String email, String password, String name, String address, Role role) {
-        this.email = email;
+    public Admin(String username, String password, Role role) {
+        this.username = username;
         this.password = password;
-        this.name = name;
-        this.address = address;
         this.role = role;
     }
 }

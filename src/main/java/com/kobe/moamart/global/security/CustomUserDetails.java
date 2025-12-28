@@ -1,6 +1,8 @@
 package com.kobe.moamart.global.security;
 
+import com.kobe.moamart.domain.admin.Admin;
 import com.kobe.moamart.domain.member.Member;
+import com.kobe.moamart.domain.role.Role;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,24 +26,33 @@ import java.util.Collections;
 public class CustomUserDetails implements UserDetails {
 
     private final Member member;
+    private final Admin admin;
 
     public CustomUserDetails(Member member) {
         this.member = member;
+        this.admin = null;
+    }
+
+    public CustomUserDetails(Admin admin) {
+        this.member = null;
+        this.admin = admin;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority(member.getRole()));
+        Role role = member != null ? member.getRole() : admin.getRole();
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
     public String getPassword() {
-        return member.getPassword();
+        return member != null ? member.getPassword() : admin.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return member.getUsername();
+        // Member는 email, Admin은 username을 반환
+        return member != null ? member.getEmail() : admin.getUsername();
     }
 
     @Override

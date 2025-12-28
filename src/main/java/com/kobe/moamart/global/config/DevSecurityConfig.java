@@ -1,6 +1,8 @@
 package com.kobe.moamart.global.config;
 
 import com.kobe.moamart.global.security.CustomUserDetailsService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,7 +10,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 /**
  * packageName    : com.kobe.moamart.global.config
@@ -42,8 +46,8 @@ public class DevSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 정적 리소스 허용
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico", "/h2-console/**").permitAll()
-                        // 로그인 페이지는 누구나 접근 가능
-                        .requestMatchers("/admin/login").permitAll()
+                        // 로그인 및 회원가입 페이지는 누구나 접근 가능
+                        .requestMatchers("/admin/login", "/join", "/login").permitAll()
                         // 메인 페이지 및 상품 상세는 누구나 접근 가능
                         .requestMatchers("/", "/products/**", "/cart", "/orders/**").permitAll()
                         // 관리자 페이지는 ADMIN 권한 필요
@@ -54,10 +58,22 @@ public class DevSecurityConfig {
 
                 // 4. 로그인 폼 설정
                 .formLogin(login -> login
-                        .loginPage("/admin/login") // 커스텀 로그인 페이지
+                        .loginPage("/login") // 기본 로그인 페이지 (일반 사용자)
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/admin/products", true) // 로그인 성공 후 관리자 상품 목록으로
-                        .failureUrl("/admin/login?error=true") // 로그인 실패 시
+                        .successHandler(new AuthenticationSuccessHandler() {
+                            @Override
+                            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws jakarta.servlet.ServletException, java.io.IOException {
+                                // 권한에 따라 리다이렉트 처리
+                                boolean isAdmin = authentication.getAuthorities().stream()
+                                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                                if (isAdmin) {
+                                    response.sendRedirect("/admin/products");
+                                } else {
+                                    response.sendRedirect("/");
+                                }
+                            }
+                        })
+                        .failureUrl("/login?error=true") // 로그인 실패 시
                         .permitAll()
                 )
                 .logout(logout -> logout
