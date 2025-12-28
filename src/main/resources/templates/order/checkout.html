@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>주문/결제 - Moamart</title>
+    <style>
+      body {
+        font-family: "Apple SD Gothic Neo", sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+      }
+      .container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+        display: flex;
+        gap: 30px;
+      }
+
+      /* 왼쪽: 입력 폼 */
+      .form-section {
+        flex: 2;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+      h2 {
+        margin-top: 0;
+        border-bottom: 2px solid #333;
+        padding-bottom: 15px;
+        font-size: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #555;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 16px;
+      }
+
+      /* 오른쪽: 주문 요약 */
+      .summary-section {
+        flex: 1;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        height: fit-content;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        font-size: 14px;
+        color: #555;
+      }
+      .summary-total {
+        border-top: 2px solid #eee;
+        margin-top: 20px;
+        padding-top: 20px;
+        font-weight: bold;
+        font-size: 20px;
+        color: #d32f2f;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .btn-submit {
+        width: 100%;
+        padding: 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 20px;
+      }
+      .btn-submit:hover {
+        background-color: #0056b3;
+      }
+
+      /* 에러 메시지 */
+      .error-msg {
+        background-color: #ffebee;
+        color: #c62828;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+      /* 취소 버튼 스타일 추가 */
+      .btn-cancel {
+        width: 100%;
+        padding: 15px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        color: #666;
+        border-radius: 4px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .btn-cancel:hover {
+        background-color: #f1f1f1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="form-section">
+        <h2>🚚 배송지 정보 입력</h2>
+
+        <div
+          th:if="${errorMessage}"
+          class="error-msg"
+          th:text="${errorMessage}"
+        >
+          에러 메시지
+        </div>
+
+        <form action="/orders/checkout" method="post">
+          <div class="form-group">
+            <label for="recipientName">받는 분</label>
+            <input
+              type="text"
+              id="recipientName"
+              name="recipientName"
+              placeholder="이름을 입력하세요"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="phoneNumber">연락처</label>
+            <input
+              type="text"
+              id="phoneNumber"
+              name="phoneNumber"
+              placeholder="010-0000-0000"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="deliveryAddress">주소</label>
+            <input
+              type="text"
+              id="deliveryAddress"
+              name="deliveryAddress"
+              placeholder="배송 주소를 입력하세요"
+              required
+            />
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 20px">
+            <button
+              type="button"
+              class="btn-cancel"
+              onclick="location.href='/cart'"
+            >
+              취소
+            </button>
+            <button type="submit" class="btn-submit" style="margin-top: 0">
+              결제하기
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="summary-section">
+        <h2>🧾 주문 요약</h2>
+        <div th:each="item : ${cart}" class="summary-row">
+          <span th:text="${item.name} + ' x ' + ${item.quantity}"
+            >상품명 x 2</span
+          >
+          <span
+            th:text="${#numbers.formatInteger(item.getTotalPrice(), 0, 'COMMA')} + '원'"
+            >20,000원</span
+          >
+        </div>
+
+        <div class="summary-total">
+          <span>총 결제금액</span>
+          <span
+            th:text="${#numbers.formatInteger(totalPrice, 0, 'COMMA')} + '원'"
+            >20,000원</span
+          >
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
