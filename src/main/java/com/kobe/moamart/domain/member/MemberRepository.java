@@ -17,5 +17,5 @@ import java.util.Optional;
  * 2025. 12. 26.        kobe       최초 생성
  */
 public interface MemberRepository extends JpaRepository<Member, Long> {
-    Optional<Member> findByUsername(String username);
+    Optional<Member> findByEmail(String email);
 }

@@ -1,4 +1,4 @@
-package com.kobe.moamart.domain.member;
+package com.kobe.moamart.domain.role;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

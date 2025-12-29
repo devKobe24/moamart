@@ -1,5 +1,7 @@
 package com.kobe.moamart.global.init;
 
+import com.kobe.moamart.domain.admin.Admin;
+import com.kobe.moamart.domain.admin.AdminRepository;
 import com.kobe.moamart.domain.category.Category;
 import com.kobe.moamart.domain.category.CategoryRepository;
 import com.kobe.moamart.domain.member.Member;
@@ -7,6 +9,7 @@ import com.kobe.moamart.domain.member.MemberRepository;
 import com.kobe.moamart.domain.product.entity.Product;
 import com.kobe.moamart.domain.product.entity.ProductStatus;
 import com.kobe.moamart.domain.product.repository.ProductRepository;
+import com.kobe.moamart.domain.role.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -30,6 +33,7 @@ public class DataInitializer implements CommandLineRunner {
     private final MemberRepository memberRepository;
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
+    private final AdminRepository adminRepository;
 
     @Override
     @Transactional
@@ -51,12 +55,12 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initAdmin() {
-        Member admin = Member.builder()
+        Admin admin = Admin.builder()
                 .username("admin")
                 .password("{noop}1234") // {noop}: 암호화 없이 텍스트 그대로 로그인 (테스트용)
-                .role("ROLE_ADMIN")
+                .role(Role.ADMIN)
                 .build();
-        memberRepository.save(admin);
+        adminRepository.save(admin);
     }
 
     private void initCategoryAndProduct() {

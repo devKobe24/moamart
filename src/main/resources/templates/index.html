@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
   <head>
     <meta charset="UTF-8" />
     <title>Moamart - 모두를 위한 마켓</title>
@@ -30,13 +30,50 @@
         font-weight: bold;
         color: #333;
       }
+      .menu {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
       .menu a {
-        margin-left: 20px;
         color: #555;
         font-size: 14px;
+        padding: 8px 16px;
+        border-radius: 4px;
+        transition: all 0.2s;
       }
       .menu a:hover {
         color: #007bff;
+        background-color: #f0f7ff;
+      }
+      .menu a.login-btn {
+        background-color: #007bff;
+        color: white;
+        padding: 8px 20px;
+      }
+      .menu a.login-btn:hover {
+        background-color: #0056b3;
+        color: white;
+      }
+      .logout-btn {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-block;
+        transition: background-color 0.2s;
+      }
+      .logout-btn:hover {
+        background-color: #5a6268;
+      }
+      .user-name {
+        color: #555;
+        margin-right: 15px;
+        font-size: 14px;
       }
 
       /* 카테고리 메뉴 */
@@ -163,7 +200,20 @@
     <div class="navbar">
       <a href="/" class="logo">🛍️ Moamart</a>
       <div class="menu">
-        <a href="/admin/login">관리자 로그인</a>
+        <!-- 로그인되지 않은 경우 -->
+        <div sec:authorize="!isAuthenticated()">
+          <a href="/join">회원가입</a>
+          <a href="/login" class="login-btn">로그인</a>
+          <a href="/admin/login">관리자 로그인</a>
+        </div>
+        <!-- 로그인된 경우 -->
+        <div sec:authorize="isAuthenticated()">
+          <span class="user-name" sec:authentication="name"></span>
+          <form th:action="@{/logout}" method="post" style="display: inline;">
+            <button type="submit" class="logout-btn">로그아웃</button>
+          </form>
+          <a href="/admin/products" sec:authorize="hasRole('ADMIN')" style="margin-left: 10px;">관리자 페이지</a>
+        </div>
       </div>
     </div>
 

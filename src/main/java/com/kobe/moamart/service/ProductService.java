@@ -132,8 +132,8 @@ public class ProductService {
             return productRepository.findByCategoryIdAndIsDisplayedTrueOrderByIdDesc(categoryId, pageable)
                     .map(ProductListResponse::new);
         } else {
-            return productRepository.findAllByIsDisplayedTrueOrderByIdDesc(pageable)
-                    .map(ProductListResponse::new);
+        return productRepository.findAllByIsDisplayedTrueOrderByIdDesc(pageable)
+                .map(ProductListResponse::new);
         }
     }
 
