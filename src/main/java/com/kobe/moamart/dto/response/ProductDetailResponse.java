@@ -28,6 +28,7 @@ public class ProductDetailResponse {
     private String description;
     private String thumbnailUrl;
     private List<String> detailImages; // 상세 이미지 URL 리스트
+    private int stockQuantity; // 입고량 (현재 재고 수량)
 
     public ProductDetailResponse(Product product) {
         this.id = product.getId();
@@ -37,6 +38,7 @@ public class ProductDetailResponse {
         this.status = product.getStatus();
         this.description = product.getDescription();
         this.thumbnailUrl = product.getThumbnailUrl();
+        this.stockQuantity = product.getStockQuantity();
 
         // ProductImage 엔티티 리스트를 URL 문자열 리스트로 변환
         this.detailImages = product.getImages().stream()

@@ -34,23 +34,41 @@ public class CartService {
      * 장바구니 담기
      */
     public void addCart(Long productId, int quantity, HttpSession session) {
-        // 1. 세션에서 장바구니 목록 가져오기 (없으면 생성)
+        // 1. 상품 조회 (재고 확인용)
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
+
+        // 2. 세션에서 장바구니 목록 가져오기 (없으면 생성)
         List<CartItem> cart = getCartFromSession(session);
 
-        // 2. 이미 장바구니에 있는 상품인지 확인
+        // 3. 이미 장바구니에 있는 상품인지 확인
         Optional<CartItem> existingItem = cart.stream()
                 .filter(item -> item.getProductId().equals(productId))
                 .findFirst();
 
+        int finalQuantity;
         if (existingItem.isPresent()) {
             // 이미 있으면 수량만 증가
             CartItem item = existingItem.get();
-            item.setQuantity(item.getQuantity() + quantity);
+            finalQuantity = item.getQuantity() + quantity;
         } else {
             // 없으면 새로 추가
-            Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
+            finalQuantity = quantity;
+        }
 
+        // 4. 최종 수량이 입고량을 초과하는지 확인
+        if (finalQuantity > product.getStockQuantity()) {
+            throw new IllegalArgumentException(
+                    String.format("입고량을 초과할 수 없습니다. (현재 재고: %d개, 요청 수량: %d개)",
+                            product.getStockQuantity(), finalQuantity)
+            );
+        }
+
+        // 5. 수량 업데이트 또는 새 아이템 추가
+        if (existingItem.isPresent()) {
+            CartItem item = existingItem.get();
+            item.setQuantity(finalQuantity);
+        } else {
             CartItem newItem = new CartItem();
             newItem.setProductId(product.getId());
             newItem.setName(product.getName());
@@ -61,7 +79,7 @@ public class CartService {
             cart.add(newItem);
         }
 
-        // 3. 세션에 다시 저장
+        // 6. 세션에 다시 저장
         session.setAttribute(CART_SESSION_KEY, cart);
     }
 
