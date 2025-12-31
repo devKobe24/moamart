@@ -2,6 +2,7 @@ package com.kobe.moamart.service;
 
 import com.kobe.moamart.domain.category.Category;
 import com.kobe.moamart.domain.category.CategoryRepository;
+import com.kobe.moamart.domain.order.repository.OrderItemRepository;
 import com.kobe.moamart.domain.product.entity.Product;
 import com.kobe.moamart.domain.product.entity.ProductImage;
 import com.kobe.moamart.domain.product.entity.ProductStatus;
@@ -37,6 +38,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository; // 카테고리 조회용 추가
     private final FileUploader fileUploader; // 파일 업로더 추가
+    private final OrderItemRepository orderItemRepository; // 주문 수량 조회용
 
     /**
      * 관리자용 상품 목록 조회 (페이징 + 검색)
@@ -44,8 +46,11 @@ public class ProductService {
     public Page<ProductListResponse> getAdminProductList(ProductSearchCondition condition, Pageable pageable) {
         // 1. Repository에서 Entity Page 조회 (QueryDSL)
         return productRepository.search(condition, pageable)
-                // 2. Entity -> DTO로 변환 (map 함수 이용)
-                .map(ProductListResponse::new);
+                // 2. Entity -> DTO로 변환 (주문 수량 포함)
+                .map(product -> {
+                    int totalOrderedQuantity = orderItemRepository.getTotalOrderedQuantity(product.getId());
+                    return new ProductListResponse(product, totalOrderedQuantity);
+                });
     }
 
     /**

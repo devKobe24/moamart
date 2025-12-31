@@ -170,11 +170,13 @@
             <th style="width: 5%">ID</th>
             <th style="width: 10%">이미지</th>
             <th style="width: 10%">카테고리</th>
-            <th style="width: 30%">상품명</th>
-            <th style="width: 15%">가격</th>
-            <th style="width: 15%">상태</th>
-            <th style="width: 10%">노출</th>
-            <th style="width: 15%">수정일</th>
+            <th style="width: 25%">상품명</th>
+            <th style="width: 12%">가격</th>
+            <th style="width: 12%">상태</th>
+            <th style="width: 8%">노출</th>
+            <th style="width: 10%">입고량</th>
+            <th style="width: 10%">남은수량</th>
+            <th style="width: 13%">수정일</th>
             <th>관리</th>
           </tr>
         </thead>
@@ -256,6 +258,10 @@
             </td>
 
             <td th:text="${item.displayed ? 'ON' : 'OFF'}">ON</td>
+
+            <td th:text="${item.initialStockQuantity}">100</td>
+
+            <td th:text="${item.stockQuantity}">100</td>
 
             <td
               th:text="${#temporals.format(item.updatedAt, 'yyyy-MM-dd HH:mm')}"
