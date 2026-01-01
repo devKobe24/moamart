@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>주문 검토 - Moamart</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Apple SD Gothic Neo", sans-serif;
+        background-color: #f4f4f9;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .review-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        gap: 20px;
+      }
+
+      .review-header {
+        font-size: 1.5em;
+        font-weight: bold;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .review-left {
+        flex: 1;
+      }
+
+      .review-right {
+        width: 380px;
+      }
+
+      .section {
+        background: white;
+        border-radius: 8px;
+        padding: 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .section-title {
+        font-size: 1.1em;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: #111827;
+      }
+
+      /* 매장 선택 */
+      .store-selection {
+        margin-bottom: 20px;
+      }
+
+      .store-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .store-card:hover {
+        border-color: #007bff;
+        background-color: #f0f7ff;
+      }
+
+      .store-card.selected {
+        border-color: #007bff;
+        background-color: #f0f7ff;
+      }
+
+      .store-name {
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 4px;
+      }
+
+      .store-info {
+        font-size: 0.9em;
+        color: #6b7280;
+      }
+
+      /* 주문 상품 정보 */
+      .product-item {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .product-item:last-child {
+        border-bottom: none;
+      }
+
+      .product-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 6px;
+        background-color: #f3f4f6;
+        border: 1px solid #e5e7eb;
+      }
+
+      .product-details {
+        flex: 1;
+      }
+
+      .product-name {
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 4px;
+      }
+
+      .product-info {
+        font-size: 0.9em;
+        color: #6b7280;
+      }
+
+      .product-price {
+        font-weight: 600;
+        color: #111827;
+      }
+
+      .stock-info {
+        font-size: 0.85em;
+        margin-top: 4px;
+      }
+
+      .stock-available {
+        color: #28a745;
+      }
+
+      .stock-low {
+        color: #ffc107;
+      }
+
+      .stock-out {
+        color: #dc3545;
+      }
+
+      /* 봉투 선택 */
+      .bag-options {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .bag-option {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .bag-option:hover {
+        border-color: #007bff;
+        background-color: #f0f7ff;
+      }
+
+      .bag-option.selected {
+        border-color: #007bff;
+        background-color: #f0f7ff;
+      }
+
+      .bag-option input[type="radio"] {
+        margin-right: 12px;
+        cursor: pointer;
+      }
+
+      .bag-option label {
+        flex: 1;
+        cursor: pointer;
+        font-weight: 500;
+      }
+
+      .bag-price {
+        color: #6b7280;
+        font-size: 0.9em;
+      }
+
+      /* 주문 요약 */
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-size: 0.95em;
+      }
+
+      .summary-row.total {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #007bff;
+        padding-top: 16px;
+        border-top: 2px solid #e5e7eb;
+        margin-top: 16px;
+      }
+
+      .summary-label {
+        color: #6b7280;
+      }
+
+      .summary-value {
+        color: #111827;
+        font-weight: 600;
+      }
+
+      .summary-value.total {
+        color: #007bff;
+        font-size: 1.3em;
+      }
+
+      .order-btn {
+        width: 100%;
+        padding: 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        margin-top: 20px;
+      }
+
+      .order-btn:hover {
+        background-color: #0056b3;
+      }
+
+      .order-btn:disabled {
+        background-color: #9ca3af;
+        cursor: not-allowed;
+      }
+
+      .error-msg {
+        background-color: #ffebee;
+        color: #c62828;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      /* 모바일 대응 */
+      @media (max-width: 768px) {
+        body {
+          padding: 10px;
+        }
+
+        .review-container {
+          flex-direction: column;
+        }
+
+        .review-right {
+          width: 100%;
+        }
+
+        .section {
+          padding: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="review-container">
+      <div class="review-left">
+        <div class="review-header">
+          <span>주문 검토</span>
+        </div>
+
+        <div
+          th:if="${errorMessage}"
+          class="error-msg"
+          th:text="${errorMessage}"
+        >
+          에러 메시지
+        </div>
+
+        <!-- 매장 선택 -->
+        <div class="section">
+          <h3 class="section-title">방문할 매장을 선택해 주세요</h3>
+          <div class="store-selection">
+            <div
+              th:each="store, iterStat : ${stores}"
+              class="store-card"
+              th:classappend="${iterStat.first} ? 'selected' : ''"
+              th:data-store-id="${store.id}"
+              onclick="selectStore(this)"
+            >
+              <div class="store-name" th:text="${store.name}">모아마트</div>
+              <div class="store-info">
+                <span th:text="${store.address}">대전광역시 대덕구</span>
+                <span style="margin: 0 8px">|</span>
+                <span th:text="${store.phoneNumber}">042-522-4462</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 주문 상품 정보 -->
+        <div class="section">
+          <h3 class="section-title" style="color: #28a745">주문가능</h3>
+          <div th:each="item : ${cart}">
+            <div class="product-item">
+              <img
+                th:if="${item.thumbnailUrl != null}"
+                th:src="${item.thumbnailUrl}"
+                th:alt="${item.name}"
+                class="product-image"
+              />
+              <div
+                th:unless="${item.thumbnailUrl != null}"
+                class="product-image"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: #9ca3af;
+                  font-size: 12px;
+                "
+              >
+                No Image
+              </div>
+              <div class="product-details">
+                <div class="product-name" th:text="${item.name}"></div>
+                <div class="product-info">
+                  <span th:text="'수량: ' + ${item.quantity} + '개'"></span>
+                </div>
+              </div>
+              <div class="product-price">
+                <div
+                  th:text="'₩' + ${#numbers.formatInteger(item.getTotalPrice(), 0, 'COMMA')}"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 봉투 선택 -->
+        <div class="section">
+          <h3 class="section-title">종량제 봉투 추가</h3>
+          <div class="bag-options">
+            <div class="bag-option selected" onclick="selectBag('NONE', this)">
+              <input type="radio" name="bagType" value="NONE" checked />
+              <label>선택안함</label>
+            </div>
+            <div class="bag-option" onclick="selectBag('BAG_20L', this)">
+              <input type="radio" name="bagType" value="BAG_20L" />
+              <label>20L 봉투 <span class="bag-price">(+660원)</span></label>
+            </div>
+            <div class="bag-option" onclick="selectBag('BAG_10L', this)">
+              <input type="radio" name="bagType" value="BAG_10L" />
+              <label>10L 봉투 <span class="bag-price">(+330원)</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 주문 요약 -->
+      <div class="review-right">
+        <div class="section" style="position: sticky; top: 20px">
+          <h3 class="section-title">주문 요약</h3>
+
+          <div class="summary-row">
+            <span class="summary-label">상품 금액</span>
+            <span
+              class="summary-value"
+              id="total-product-price"
+              th:text="'₩' + ${#numbers.formatInteger(totalPrice, 0, 'COMMA')}"
+            ></span>
+          </div>
+
+          <div class="summary-row">
+            <span class="summary-label">종량제 봉투</span>
+            <span class="summary-value" id="bag-price">₩0</span>
+          </div>
+
+          <div class="summary-row total">
+            <span class="summary-label">결제 예정 금액</span>
+            <span class="summary-value total" id="final-price"></span>
+          </div>
+
+          <button
+            type="button"
+            class="order-btn"
+            id="order-btn"
+            onclick="goToCheckout()"
+          >
+            주문하기 (<span th:text="${cart.size()}">0</span>)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let selectedStoreId = null;
+      let selectedBagType = "NONE";
+
+      // 페이지 로드 시 첫 번째 매장 선택
+      document.addEventListener("DOMContentLoaded", function () {
+        const firstStore = document.querySelector(".store-card");
+        if (firstStore) {
+          selectedStoreId = firstStore.getAttribute("data-store-id");
+        }
+        calculateFinalPrice();
+      });
+
+      // 매장 선택
+      function selectStore(element) {
+        // 모든 카드에서 selected 제거
+        document.querySelectorAll(".store-card").forEach((card) => {
+          card.classList.remove("selected");
+        });
+
+        // 선택한 카드에 selected 추가
+        element.classList.add("selected");
+        selectedStoreId = element.getAttribute("data-store-id");
+      }
+
+      // 봉투 선택
+      function selectBag(bagType, element) {
+        // 모든 옵션에서 selected 제거
+        document.querySelectorAll(".bag-option").forEach((option) => {
+          option.classList.remove("selected");
+        });
+
+        // 선택한 옵션에 selected 추가
+        element.classList.add("selected");
+
+        // 라디오 버튼 체크
+        element.querySelector('input[type="radio"]').checked = true;
+        selectedBagType = bagType;
+
+        // 가격 업데이트
+        updateBagPrice();
+        calculateFinalPrice();
+      }
+
+      // 봉투 가격 업데이트
+      function updateBagPrice() {
+        const bagPriceElement = document.getElementById("bag-price");
+        let price = 0;
+        if (selectedBagType === "BAG_10L") {
+          price = 330;
+        } else if (selectedBagType === "BAG_20L") {
+          price = 660;
+        }
+        bagPriceElement.textContent = "₩" + price.toLocaleString("ko-KR");
+      }
+
+      // 최종 결제 금액 계산
+      function calculateFinalPrice() {
+        const totalProductPriceElement = document.getElementById(
+          "total-product-price"
+        );
+        const bagPriceElement = document.getElementById("bag-price");
+
+        const totalProductPrice =
+          parseInt(
+            totalProductPriceElement.textContent.replace(/[^0-9]/g, "")
+          ) || 0;
+        const bagPrice =
+          parseInt(bagPriceElement.textContent.replace(/[^0-9]/g, "")) || 0;
+
+        const finalPrice = totalProductPrice + bagPrice;
+        document.getElementById("final-price").textContent =
+          "₩" + finalPrice.toLocaleString("ko-KR");
+      }
+
+      // 주문하기 버튼 클릭
+      function goToCheckout() {
+        if (!selectedStoreId) {
+          alert("매장을 선택해주세요.");
+          return;
+        }
+
+        // 주문/결제 페이지로 이동 (매장 ID와 봉투 타입 전달)
+        const url =
+          "/orders/checkout?storeId=" +
+          selectedStoreId +
+          "&bagType=" +
+          selectedBagType;
+        location.href = url;
+      }
+    </script>
+  </body>
+</html>

@@ -33,6 +33,9 @@ public class AdminOrderDetailResponse {
     // 결제 정보
     private int totalPrice;
 
+    // 픽업 시간 정보
+    private LocalDateTime pickupDateTime;
+
     // 주문 상품 리스트
     private List<AdminOrderItemDto> orderItems;
 
@@ -44,6 +47,7 @@ public class AdminOrderDetailResponse {
         this.phoneNumber = order.getPhoneNumber();
         this.deliveryAddress = order.getDeliveryAddress();
         this.totalPrice = order.getTotalPrice();
+        this.pickupDateTime = order.getPickupDateTime();
 
         this.orderItems = order.getOrderItems().stream()
                 .map(AdminOrderItemDto::new)

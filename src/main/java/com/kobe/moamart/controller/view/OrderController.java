@@ -1,8 +1,10 @@
 package com.kobe.moamart.controller.view;
 
+import com.kobe.moamart.domain.order.entity.BagType;
 import com.kobe.moamart.dto.cart.CartItem;
 import com.kobe.moamart.service.CartService;
 import com.kobe.moamart.service.OrderService;
+import com.kobe.moamart.service.StoreService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -32,41 +36,93 @@ public class OrderController {
 
     private final OrderService orderService;
     private final CartService cartService;
+    private final StoreService storeService;
 
     /**
-     * 1. 주문서 작성 페이지 (GET)
+     * 주문 검토 페이지 (픽업 서비스)
      */
-    @GetMapping("/orders/checkout")
-    public String checkoutForm(HttpSession session, Model model) {
+    @GetMapping("/orders/review")
+    public String reviewOrder(HttpSession session, Model model) {
         // 장바구니가 비어있으면 장바구니 페이지로 튕겨냄
         List<CartItem> cart = cartService.getCartFromSession(session);
         if (cart.isEmpty()) {
             return "redirect:/cart";
         }
 
-        // 결제 예상 금액 계산
+        // 활성화된 매장 목록 조회
+        var stores = storeService.getActiveStores();
+        if (stores.isEmpty()) {
+            model.addAttribute("errorMessage", "픽업 가능한 매장이 없습니다. 관리자에게 문의해주세요.");
+            return "cart";
+        }
+
+        // 상품 금액 계산
         long totalPrice = cart.stream()
                 .mapToLong(CartItem::getTotalPrice)
                 .sum();
 
-        // 배송비 계산 (기본 3,000원, 50,000원 이상 구매 시 무료)
-        long shippingFee = totalPrice >= 50000 ? 0 : 3000;
+        model.addAttribute("cart", cart);
+        model.addAttribute("stores", stores);
+        model.addAttribute("totalPrice", totalPrice);
+
+        return "orders/review"; // templates/orders/review.html
+    }
+
+    /**
+     * 주문서 작성 페이지 (GET) - 픽업 서비스
+     */
+    @GetMapping("/orders/checkout")
+    public String checkoutForm(
+            @RequestParam Long storeId,
+            @RequestParam(required = false) String bagType,
+            HttpSession session,
+            Model model
+    ) {
+        // 장바구니가 비어있으면 장바구니 페이지로 튕겨냄
+        List<CartItem> cart = cartService.getCartFromSession(session);
+        if (cart.isEmpty()) {
+            return "redirect:/cart";
+        }
+
+        // 매장 조회
+        var store = storeService.getStore(storeId);
+
+        // 상품 금액 계산
+        long totalPrice = cart.stream()
+                .mapToLong(CartItem::getTotalPrice)
+                .sum();
+
+        // 봉투 가격 계산
+        BagType bagTypeEnum = bagType != null && !bagType.isEmpty() 
+                ? BagType.valueOf(bagType) 
+                : BagType.NONE;
+        long bagPrice = orderService.calculateBagPrice(bagTypeEnum);
+
+        // 총 결제 금액
+        long finalPrice = totalPrice + bagPrice;
 
         model.addAttribute("cart", cart);
         model.addAttribute("totalPrice", totalPrice);
-        model.addAttribute("shippingFee", shippingFee);
+        model.addAttribute("bagPrice", bagPrice);
+        model.addAttribute("finalPrice", finalPrice);
+        model.addAttribute("store", store);
+        model.addAttribute("storeId", storeId);
+        model.addAttribute("bagType", bagTypeEnum);
 
         return "order/checkout"; // templates/order/checkout.html
     }
 
     /**
-     * 2. 주문 처리 (POST)
+     * 주문 처리 (POST) - 픽업 주문
      */
     @PostMapping("/orders/checkout")
     public String processOrder(
             @RequestParam String recipientName,
-            @RequestParam String deliveryAddress,
             @RequestParam String phoneNumber,
+            @RequestParam Long storeId,
+            @RequestParam(required = false) String bagType,
+            @RequestParam(defaultValue = "00") String pickupHour,
+            @RequestParam(defaultValue = "00") String pickupMinute,
             HttpSession session,
             RedirectAttributes redirectAttributes
     ) {
@@ -76,8 +132,19 @@ public class OrderController {
         }
 
         try {
-            // 주문 서비스 호출 (재고 감소, 주문 저장)
-            Long orderId = orderService.order(recipientName, deliveryAddress, phoneNumber, cart);
+            // 봉투 타입 파싱
+            BagType bagTypeEnum = bagType != null && !bagType.isEmpty() 
+                    ? BagType.valueOf(bagType) 
+                    : BagType.NONE;
+
+            // 픽업 시간 파싱 (시간과 분을 받아서 LocalDateTime 생성)
+            int hour = Integer.parseInt(pickupHour);
+            int minute = Integer.parseInt(pickupMinute);
+            LocalDateTime pickupDateTime = LocalDate.now()
+                    .atTime(hour, minute);
+
+            // 픽업 주문 생성
+            orderService.createPickupOrder(recipientName, phoneNumber, storeId, bagTypeEnum, pickupDateTime, cart);
 
             // 주문 성공 시 장바구니 비우기
             cartService.clearCart(session);
@@ -85,9 +152,9 @@ public class OrderController {
             // 완료 페이지로 리다이렉트
             return "redirect:/orders/complete";
         } catch (Exception e) {
-            // 재고 부족 등의 에러 발생 시 다시 주문 페이지로 (에러 메시지 전달)
+            // 재고 부족 등의 에러 발생 시 다시 주문 검토 페이지로
             redirectAttributes.addFlashAttribute("errorMessage", "주문 처리 중 오류가 발생했습니다: " + e.getMessage());
-            return "redirect:/orders/checkout";
+            return "redirect:/orders/review";
         }
     }
 

@@ -1,6 +1,7 @@
 package com.kobe.moamart.domain.order.entity;
 
 import com.kobe.moamart.domain.BaseTimeEntity;
+import com.kobe.moamart.domain.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -43,18 +44,39 @@ public class Order extends BaseTimeEntity {
 
     private LocalDateTime orderDate; // 주문 시간
 
+    private LocalDateTime pickupDateTime; // 픽업 예정일시
+
+    @Enumerated(EnumType.STRING)
+    private BagType bagType; // 봉투 타입
+
     // 주문 상품들 (1:N 관계)
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    // 픽업 매장 (N:1 관계)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id")
+    private Store store;
+
     // --- 생성 메서드 (비즈니스 로직) ---
-    public static Order createOrder(String name, String address, String phone, List<OrderItem> orderItems) {
+
+    // --- 픽업 주문 생성
+    public static Order createPickupOrder(
+            String name,
+            String phoneNumber,
+            Store store,
+            BagType bagType,
+            LocalDateTime pickupDateTime,
+            List<OrderItem> orderItems
+    ) {
         Order order = new Order();
         order.recipientName = name;
-        order.deliveryAddress = address;
-        order.phoneNumber = phone;
+        order.phoneNumber = phoneNumber;
+        order.store = store;
+        order.bagType = bagType;
         order.status = OrderStatus.ORDER;
         order.orderDate = LocalDateTime.now();
+        order.pickupDateTime = pickupDateTime;
 
         for (OrderItem orderItem : orderItems) {
             order.addOrderItem(orderItem);

@@ -45,7 +45,7 @@
         border: none;
         padding: 12px 24px;
         border-radius: 8px;
-        font-size: 1em;
+        font-size: 17.6px;
         font-weight: 600;
         cursor: pointer;
         transition: background-color 0.2s;
@@ -474,27 +474,173 @@
             </div>
           </div>
 
-          <!-- 배송지 정보 -->
+          <!-- 픽업 매장 정보 -->
           <div
             class="section-title"
             style="font-size: 0.95em; margin-bottom: 12px; margin-top: 20px"
           >
-            배송지 정보
+            픽업 매장 정보
           </div>
-          <div class="address-header">
-            <div></div>
-            <button
-              type="button"
-              class="load-default-btn"
-              onclick="loadDefaultAddress()"
+          <div
+            style="
+              padding: 16px;
+              background-color: #f0f7ff;
+              border-radius: 8px;
+              margin-bottom: 20px;
+            "
+          >
+            <div
+              style="font-weight: 600; color: #111827; margin-bottom: 8px"
+              th:text="${store.name}"
             >
-              기본 배송지 불러오기
-            </button>
+              모아마트
+            </div>
+            <div
+              style="font-size: 0.9em; color: #6b7280; margin-bottom: 4px"
+              th:text="${store.address}"
+            >
+              서울특별시 강남구
+            </div>
+            <div
+              style="font-size: 0.9em; color: #6b7280"
+              th:text="${store.phoneNumber}"
+            >
+              02-1234-5678
+            </div>
+            <div
+              style="
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid #e5e7eb;
+              "
+            >
+              <div
+                style="
+                  font-size: 0.9em;
+                  color: #6b7280;
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  flex-wrap: wrap;
+                "
+              >
+                <span>픽업 예정일:</span>
+                <span
+                  style="font-weight: 600; color: #007bff"
+                  id="pickup-date"
+                  th:text="${#temporals.format(#temporals.createToday(), 'yyyy년 MM월 dd일')}"
+                  >오늘</span
+                >
+                <select
+                  id="pickup-hour"
+                  name="pickupHour"
+                  style="
+                    padding: 4px 8px;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 4px;
+                    font-size: 0.9em;
+                    background-color: white;
+                  "
+                >
+                  <option value="00">00</option>
+                  <option value="01">01</option>
+                  <option value="02">02</option>
+                  <option value="03">03</option>
+                  <option value="04">04</option>
+                  <option value="05">05</option>
+                  <option value="06">06</option>
+                  <option value="07">07</option>
+                  <option value="08">08</option>
+                  <option value="09">09</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                  <option value="13">13</option>
+                  <option value="14">14</option>
+                  <option value="15">15</option>
+                  <option value="16">16</option>
+                  <option value="17">17</option>
+                  <option value="18">18</option>
+                  <option value="19">19</option>
+                  <option value="20">20</option>
+                </select>
+                <span>시</span>
+                <select
+                  id="pickup-minute"
+                  name="pickupMinute"
+                  style="
+                    padding: 4px 8px;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 4px;
+                    font-size: 0.9em;
+                    background-color: white;
+                  "
+                >
+                  <option value="00">00</option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="30">30</option>
+                  <option value="40">40</option>
+                  <option value="50">50</option>
+                </select>
+                <span>분</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 봉투 정보 -->
+          <div
+            class="section-title"
+            style="font-size: 0.95em; margin-bottom: 12px; margin-top: 20px"
+            th:if="${bagType != null && bagType != T(com.kobe.moamart.domain.order.entity.BagType).NONE}"
+          >
+            선택한 봉투
+          </div>
+          <div
+            th:if="${bagType != null && bagType != T(com.kobe.moamart.domain.order.entity.BagType).NONE}"
+            style="
+              padding: 16px;
+              background-color: #f9fafb;
+              border-radius: 8px;
+              margin-bottom: 20px;
+            "
+          >
+            <div style="font-weight: 500; color: #111827">
+              <span
+                th:if="${bagType == T(com.kobe.moamart.domain.order.entity.BagType).BAG_10L}"
+                >10L 봉투</span
+              >
+              <span
+                th:if="${bagType == T(com.kobe.moamart.domain.order.entity.BagType).BAG_20L}"
+                >20L 봉투</span
+              >
+              <span
+                style="color: #6b7280; margin-left: 8px"
+                th:text="'(+₩' + ${#numbers.formatInteger(bagPrice, 0, 'COMMA')} + ')'"
+              ></span>
+            </div>
+          </div>
+
+          <!-- 픽업자 정보 -->
+          <div
+            class="section-title"
+            style="font-size: 0.95em; margin-bottom: 12px; margin-top: 20px"
+          >
+            픽업자 정보
           </div>
 
           <form id="checkout-form" action="/orders/checkout" method="post">
+            <input type="hidden" name="storeId" th:value="${storeId}" />
+            <input type="hidden" name="bagType" th:value="${bagType}" />
+            <input type="hidden" name="pickupHour" id="hidden-pickup-hour" />
+            <input
+              type="hidden"
+              name="pickupMinute"
+              id="hidden-pickup-minute"
+            />
+
             <div class="form-group">
-              <label for="recipient-name">받는 분</label>
+              <label for="recipient-name">이름</label>
               <input
                 type="text"
                 id="recipient-name"
@@ -510,92 +656,9 @@
                 type="tel"
                 id="recipient-phone"
                 name="phoneNumber"
-                placeholder="연락처를 입력하세요"
+                placeholder="연락처를 입력하세요 (예: 010-1234-5678)"
                 required
               />
-            </div>
-
-            <div class="form-group">
-              <label>주소</label>
-              <div class="address-row">
-                <input
-                  type="text"
-                  id="sample3_postcode"
-                  placeholder="우편번호"
-                  readonly
-                />
-                <button type="button" onclick="sample3_execDaumPostcode()">
-                  우편번호 찾기
-                </button>
-              </div>
-              <input
-                type="text"
-                id="sample3_address"
-                placeholder="주소"
-                readonly
-                style="margin-bottom: 8px"
-              />
-              <input
-                type="text"
-                id="sample3_detailAddress"
-                placeholder="상세주소"
-                style="margin-bottom: 8px"
-              />
-              <input
-                type="text"
-                id="sample3_extraAddress"
-                placeholder="참고항목"
-                readonly
-              />
-              <input type="hidden" id="delivery-address" name="deliveryAddress" />
-              <div
-                id="wrap"
-                style="
-                  display: none;
-                  border: 1px solid;
-                  width: 100%;
-                  height: 300px;
-                  margin: 5px 0;
-                  position: relative;
-                "
-              >
-                <img
-                  src="//t1.daumcdn.net/postcode/resource/images/close.png"
-                  id="btnFoldWrap"
-                  style="
-                    cursor: pointer;
-                    position: absolute;
-                    right: 0px;
-                    top: -1px;
-                    z-index: 1;
-                  "
-                  onclick="foldDaumPostcode()"
-                  alt="접기 버튼"
-                />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="delivery-memo">배송 메모</label>
-              <select
-                id="delivery-memo"
-                name="deliveryMemo"
-                onchange="handleDeliveryMemoChange(this)"
-              >
-                <option value="">배송 시 요청사항을 선택해주세요</option>
-                <option value="문 앞에 놓아주세요">문 앞에 놓아주세요</option>
-                <option value="경비실에 맡겨주세요">경비실에 맡겨주세요</option>
-                <option value="배송 전 연락 바랍니다">
-                  배송 전 연락 바랍니다
-                </option>
-                <option value="직접 입력">직접 입력</option>
-              </select>
-              <textarea
-                id="delivery-memo-custom"
-                name="deliveryMemoCustom"
-                placeholder="직접 입력하세요"
-                style="display: none; margin-top: 8px"
-              ></textarea>
             </div>
 
             <!-- 할인 적용 -->
@@ -668,7 +731,11 @@
               onclick="selectPayment('BANK_TRANSFER', this)"
             >
               <label>
-                <input type="radio" name="paymentMethod" value="BANK_TRANSFER" />
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="BANK_TRANSFER"
+                />
                 무통장입금
               </label>
               <div class="payment-details">
@@ -709,28 +776,13 @@
             ></span>
           </div>
 
-          <div class="summary-row">
-            <span class="summary-label">배송비</span>
-            <span
-              class="summary-value"
-              id="shipping-fee"
-              th:text="'+₩' + ${#numbers.formatInteger(shippingFee != null ? shippingFee : 0, 0, 'COMMA')}"
-            ></span>
-          </div>
-
-          <div class="summary-row">
-            <span class="summary-label">할인 금액</span>
-            <span
-              class="summary-value"
-              id="discount-amount"
-              style="color: #ef4444"
-              >-₩0</span
-            >
-          </div>
-
           <div class="summary-row total">
             <span class="summary-label">최종 결제 금액</span>
-            <span class="summary-value total" id="final-price"></span>
+            <span
+              class="summary-value total"
+              id="final-price"
+              th:text="'₩' + ${#numbers.formatInteger(finalPrice, 0, 'COMMA')}"
+            ></span>
           </div>
 
           <div class="agreement-checkbox">
@@ -752,115 +804,7 @@
       </div>
     </div>
 
-    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
     <script>
-      // 우편번호 찾기 관련
-      var element_wrap = document.getElementById("wrap");
-
-      function foldDaumPostcode() {
-        element_wrap.style.display = "none";
-      }
-
-      function sample3_execDaumPostcode() {
-        var currentScroll = Math.max(
-          document.body.scrollTop,
-          document.documentElement.scrollTop
-        );
-        new daum.Postcode({
-          oncomplete: function (data) {
-            var addr = "";
-            var extraAddr = "";
-
-            if (data.userSelectedType === "R") {
-              addr = data.roadAddress;
-            } else {
-              addr = data.jibunAddress;
-            }
-
-            if (data.userSelectedType === "R") {
-              if (data.bname !== "" && /[동|로|가]$/g.test(data.bname)) {
-                extraAddr += data.bname;
-              }
-              if (data.buildingName !== "" && data.apartment === "Y") {
-                extraAddr +=
-                  extraAddr !== ""
-                    ? ", " + data.buildingName
-                    : data.buildingName;
-              }
-              if (extraAddr !== "") {
-                extraAddr = " (" + extraAddr + ")";
-              }
-              document.getElementById("sample3_extraAddress").value = extraAddr;
-            } else {
-              document.getElementById("sample3_extraAddress").value = "";
-            }
-
-            document.getElementById("sample3_postcode").value = data.zonecode;
-            document.getElementById("sample3_address").value = addr;
-            document.getElementById("sample3_detailAddress").focus();
-
-            updateDeliveryAddress();
-
-            element_wrap.style.display = "none";
-            document.body.scrollTop = currentScroll;
-          },
-          onresize: function (size) {
-            element_wrap.style.height = size.height + "px";
-          },
-          width: "100%",
-          height: "100%",
-        }).embed(element_wrap);
-
-        element_wrap.style.display = "block";
-      }
-
-      function updateDeliveryAddress() {
-        const postcode = document.getElementById("sample3_postcode").value;
-        const address = document.getElementById("sample3_address").value;
-        const detailAddress = document.getElementById(
-          "sample3_detailAddress"
-        ).value;
-        const extraAddress = document.getElementById(
-          "sample3_extraAddress"
-        ).value;
-
-        let fullAddress = "";
-        if (postcode) fullAddress += `[${postcode}] `;
-        if (address) fullAddress += address + " ";
-        if (detailAddress) fullAddress += detailAddress;
-        if (extraAddress) fullAddress += " " + extraAddress;
-
-        document.getElementById("delivery-address").value = fullAddress.trim();
-      }
-
-      document.addEventListener("DOMContentLoaded", function () {
-        const detailAddressInput = document.getElementById(
-          "sample3_detailAddress"
-        );
-        if (detailAddressInput) {
-          detailAddressInput.addEventListener("input", updateDeliveryAddress);
-          detailAddressInput.addEventListener("blur", updateDeliveryAddress);
-        }
-      });
-
-      // 기본 배송지 불러오기
-      function loadDefaultAddress() {
-        // TODO: 사용자 기본 주소 불러오기 (회원가입 시 입력한 주소)
-        alert("기본 배송지 불러오기 기능은 추후 구현 예정입니다.");
-      }
-
-      // 배송 메모 처리
-      function handleDeliveryMemoChange(select) {
-        const customTextarea = document.getElementById("delivery-memo-custom");
-        if (select.value === "직접 입력") {
-          customTextarea.style.display = "block";
-          customTextarea.required = true;
-        } else {
-          customTextarea.style.display = "none";
-          customTextarea.required = false;
-        }
-      }
-
       // 할인 적용 토글
       function toggleDiscount() {
         const content = document.getElementById("discount-content");
@@ -883,29 +827,17 @@
         element.querySelector('input[type="radio"]').checked = true;
       }
 
-      // 최종 결제 금액 계산
+      // 최종 결제 금액 계산 (이미 서버에서 계산되어 전달됨)
       function calculateFinalPrice() {
-        const totalProductPriceElement = document.getElementById(
-          "total-product-price"
-        );
-        const shippingFeeElement = document.getElementById("shipping-fee");
-
-        // 텍스트에서 숫자 추출
-        const totalProductPrice =
-          parseInt(
-            totalProductPriceElement.textContent.replace(/[^0-9]/g, "")
-          ) || 0;
-        const shippingFee =
-          parseInt(shippingFeeElement.textContent.replace(/[^0-9]/g, "")) || 0;
-        const discountAmount = 0; // TODO: 할인 금액 계산
-
-        const finalPrice = totalProductPrice + shippingFee - discountAmount;
-        document.getElementById("final-price").textContent =
-          "₩" + finalPrice.toLocaleString("ko-KR");
-
+        // 서버에서 계산된 finalPrice를 사용하므로 별도 계산 불필요
         const paymentBtnText = document.getElementById("payment-btn-text");
-        paymentBtnText.textContent =
-          finalPrice.toLocaleString("ko-KR") + "원 결제하기";
+        const finalPriceElement = document.getElementById("final-price");
+        if (finalPriceElement && paymentBtnText) {
+          const finalPrice =
+            parseInt(finalPriceElement.textContent.replace(/[^0-9]/g, "")) || 0;
+          paymentBtnText.textContent =
+            finalPrice.toLocaleString("ko-KR") + "원 결제하기";
+        }
       }
 
       // 결제 처리
@@ -918,11 +850,9 @@
 
         const recipientName = document.getElementById("recipient-name").value;
         const recipientPhone = document.getElementById("recipient-phone").value;
-        const deliveryAddress =
-          document.getElementById("delivery-address").value;
 
-        if (!recipientName || !recipientPhone || !deliveryAddress) {
-          alert("받는 분 정보와 배송지를 모두 입력해주세요.");
+        if (!recipientName || !recipientPhone) {
+          alert("이름과 연락처를 모두 입력해주세요.");
           return;
         }
 
@@ -933,6 +863,12 @@
           alert("결제 방법을 선택해주세요.");
           return;
         }
+
+        // 픽업 시간/분을 hidden input에 저장
+        const pickupHour = document.getElementById("pickup-hour").value;
+        const pickupMinute = document.getElementById("pickup-minute").value;
+        document.getElementById("hidden-pickup-hour").value = pickupHour;
+        document.getElementById("hidden-pickup-minute").value = pickupMinute;
 
         const paymentBtn = document.getElementById("payment-btn");
         paymentBtn.disabled = true;

@@ -4,12 +4,13 @@ import com.kobe.moamart.domain.admin.Admin;
 import com.kobe.moamart.domain.admin.AdminRepository;
 import com.kobe.moamart.domain.category.Category;
 import com.kobe.moamart.domain.category.CategoryRepository;
-import com.kobe.moamart.domain.member.Member;
 import com.kobe.moamart.domain.member.MemberRepository;
 import com.kobe.moamart.domain.product.entity.Product;
 import com.kobe.moamart.domain.product.entity.ProductStatus;
 import com.kobe.moamart.domain.product.repository.ProductRepository;
 import com.kobe.moamart.domain.role.Role;
+import com.kobe.moamart.domain.store.entity.Store;
+import com.kobe.moamart.domain.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,7 @@ public class DataInitializer implements CommandLineRunner {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final AdminRepository adminRepository;
+    private final StoreRepository storeRepository;
 
     @Override
     @Transactional
@@ -48,7 +50,10 @@ public class DataInitializer implements CommandLineRunner {
         // 2. 관리자 계정 생성
         initAdmin();
 
-        // 3. 카테고리 생성 & 상품 등록
+        // 3. 기본 매장 생성
+        initStore();
+
+        // 4. 카테고리 생성 & 상품 등록
         initCategoryAndProduct();
 
         System.out.println("✅ [DataInitializer] 초기 데이터 생성 완료!");
@@ -61,6 +66,19 @@ public class DataInitializer implements CommandLineRunner {
                 .role(Role.ADMIN)
                 .build();
         adminRepository.save(admin);
+    }
+
+    private void initStore() {
+        // 기본 매장이 없으면 생성
+        if (storeRepository.findByName("모아마트").isEmpty()) {
+            Store defaultStore = Store.builder()
+                    .name("모아마트")
+                    .address("대전광역시 대덕구 중리로31번길 47")
+                    .phoneNumber("042-522-4462")
+                    .isActive(true)
+                    .build();
+            storeRepository.save(defaultStore);
+        }
     }
 
     private void initCategoryAndProduct() {
