@@ -49,8 +49,12 @@ public class OrderController {
                 .mapToLong(CartItem::getTotalPrice)
                 .sum();
 
+        // 배송비 계산 (기본 3,000원, 50,000원 이상 구매 시 무료)
+        long shippingFee = totalPrice >= 50000 ? 0 : 3000;
+
         model.addAttribute("cart", cart);
         model.addAttribute("totalPrice", totalPrice);
+        model.addAttribute("shippingFee", shippingFee);
 
         return "order/checkout"; // templates/order/checkout.html
     }
