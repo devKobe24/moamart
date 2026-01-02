@@ -398,6 +398,16 @@
             >
               10,000원
             </div>
+            <div
+              style="
+                font-size: 12px;
+                color: #6b7280;
+                margin-top: 4px;
+              "
+              th:text="'재고: ' + ${item.stockQuantity} + '개'"
+            >
+              재고: 0개
+            </div>
           </div>
         </a>
       </div>
@@ -452,6 +462,16 @@
               th:text="${#numbers.formatInteger(item.price, 0, 'COMMA')} + '원'"
             >
               10,000원
+            </div>
+            <div
+              style="
+                font-size: 12px;
+                color: #6b7280;
+                margin-top: 4px;
+              "
+              th:text="'재고: ' + ${item.stockQuantity} + '개'"
+            >
+              재고: 0개
             </div>
           </div>
         </a>

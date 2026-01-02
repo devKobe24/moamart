@@ -1,6 +1,7 @@
 package com.kobe.moamart.controller.api;
 
 import com.kobe.moamart.dto.request.CartAddRequest;
+import com.kobe.moamart.dto.request.CartUpdateRequest;
 import com.kobe.moamart.service.CartService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -31,6 +32,20 @@ public class CartApiController {
         try {
             cartService.addCart(request.getProductId(), request.getQuantity(), session);
             return ResponseEntity.ok("장바구니에 담겼습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PatchMapping("/{productId}")
+    public ResponseEntity<?> updateCartItemQuantity(
+            @PathVariable Long productId,
+            @Valid @RequestBody CartUpdateRequest request,
+            HttpSession session
+    ) {
+        try {
+            cartService.updateCartItemQuantity(productId, request.getQuantity(), session);
+            return ResponseEntity.ok("수량이 변경되었습니다.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

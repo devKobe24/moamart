@@ -511,6 +511,17 @@
           <div class="category" th:text="${product.categoryName}">카테고리</div>
           <div class="product-name" th:text="${product.name}">상품명</div>
 
+          <div
+            style="
+              font-size: 14px;
+              color: #6b7280;
+              margin-bottom: 20px;
+            "
+            th:text="'재고: ' + ${product.stockQuantity} + '개'"
+          >
+            재고: 0개
+          </div>
+
           <div class="price-control-row">
             <div class="quantity-control">
               <button type="button" id="btn-decrease" onclick="changeQuantity(-1)">−</button>

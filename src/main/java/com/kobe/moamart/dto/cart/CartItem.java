@@ -20,6 +20,7 @@ public class CartItem {
     private Long price;
     private String thumbnailUrl;
     private int quantity; // 수량
+    private int stockQuantity; // 재고 수량 (수량 변경 시 최대값 체크용)
 
     // 수량에 따른 총 가격 계산
     public Long getTotalPrice() {

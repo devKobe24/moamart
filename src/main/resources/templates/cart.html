@@ -133,6 +133,66 @@
         text-decoration: none;
         border-radius: 4px;
       }
+
+      /* 수량 조절기 스타일 */
+      .quantity-control {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+        background-color: white;
+        width: fit-content;
+        margin: 0 auto;
+      }
+
+      .quantity-control button {
+        width: 30px;
+        height: 30px;
+        background-color: #f9f9f9;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        color: #555;
+        transition: 0.1s;
+      }
+
+      .quantity-control button:hover {
+        background-color: #eee;
+      }
+
+      .quantity-control button:active {
+        background-color: #ddd;
+      }
+
+      .quantity-control button:disabled {
+        background-color: #f5f5f5;
+        color: #ccc;
+        cursor: not-allowed;
+      }
+
+      .quantity-control button:disabled:hover {
+        background-color: #f5f5f5;
+      }
+
+      .quantity-control input {
+        width: 45px;
+        height: 30px;
+        text-align: center;
+        border: none;
+        border-left: 1px solid #ddd;
+        border-right: 1px solid #ddd;
+        font-size: 14px;
+        font-weight: bold;
+        outline: none;
+        -moz-appearance: textfield;
+      }
+
+      .quantity-control input::-webkit-outer-spin-button,
+      .quantity-control input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
     </style>
   </head>
   <body>
@@ -200,9 +260,38 @@
               >
                 10,000원
               </td>
-              <td th:text="${item.quantity} + '개'">1개</td>
+              <td>
+                <div class="quantity-control">
+                  <button
+                    type="button"
+                    th:id="'btn-decrease-' + ${item.productId}"
+                    th:onclick="'changeQuantity(' + ${item.productId} + ', -1)'"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    th:id="'quantity-' + ${item.productId}"
+                    th:value="${item.quantity}"
+                    th:attr="data-product-id=${item.productId}, data-max-quantity=${item.stockQuantity}"
+                    min="1"
+                    th:max="${item.stockQuantity}"
+                    readonly
+                    onchange="updateQuantityDirect(this)"
+                  />
+                  <button
+                    type="button"
+                    th:id="'btn-increase-' + ${item.productId}"
+                    th:onclick="'changeQuantity(' + ${item.productId} + ', 1)'"
+                  >
+                    +
+                  </button>
+                </div>
+              </td>
               <td
+                th:id="'total-price-' + ${item.productId}"
                 th:text="${#numbers.formatInteger(item.getTotalPrice(), 0, 'COMMA')} + '원'"
+                th:data-unit-price="${item.price}"
                 style="font-weight: bold"
               >
                 10,000원
@@ -223,6 +312,7 @@
           <span class="total-label">총 결제 금액</span>
           <span
             class="total-price"
+            id="total-price-display"
             th:text="${#numbers.formatInteger(totalPrice, 0, 'COMMA')} + '원'"
             >0원</span
           >
@@ -238,6 +328,128 @@
     </div>
 
     <script>
+      // 수량 변경 함수
+      function changeQuantity(productId, change) {
+        const quantityInput = document.getElementById(`quantity-${productId}`);
+        const currentQty = parseInt(quantityInput.value);
+        const maxQty = parseInt(quantityInput.getAttribute('data-max-quantity'));
+        
+        let newQty = currentQty + change;
+        if (newQty < 1) {
+          newQty = 1;
+        }
+        if (newQty > maxQty) {
+          newQty = maxQty;
+        }
+
+        // 수량 업데이트
+        updateCartQuantity(productId, newQty);
+      }
+
+      // 직접 입력 시 수량 업데이트
+      function updateQuantityDirect(input) {
+        const productId = input.getAttribute('data-product-id');
+        const newQty = parseInt(input.value);
+        const maxQty = parseInt(input.getAttribute('data-max-quantity'));
+
+        let validQty = newQty;
+        if (validQty < 1) {
+          validQty = 1;
+          input.value = 1;
+        }
+        if (validQty > maxQty) {
+          validQty = maxQty;
+          input.value = maxQty;
+        }
+
+        updateCartQuantity(productId, validQty);
+      }
+
+      // 장바구니 수량 업데이트 API 호출
+      function updateCartQuantity(productId, newQuantity) {
+        const quantityInput = document.getElementById(`quantity-${productId}`);
+        const btnDecrease = document.getElementById(`btn-decrease-${productId}`);
+        const btnIncrease = document.getElementById(`btn-increase-${productId}`);
+        const totalPriceElement = document.getElementById(`total-price-${productId}`);
+        const maxQty = parseInt(quantityInput.getAttribute('data-max-quantity'));
+
+        fetch(`/api/cart/${productId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            quantity: newQuantity
+          })
+        })
+        .then((response) => {
+          if (response.ok) {
+            // 수량 업데이트
+            quantityInput.value = newQuantity;
+
+            // 버튼 상태 업데이트
+            btnDecrease.disabled = newQuantity <= 1;
+            btnIncrease.disabled = newQuantity >= maxQty;
+
+            // 해당 상품의 총 가격 업데이트
+            const unitPrice = parseInt(totalPriceElement.getAttribute('data-unit-price'));
+            const newTotalPrice = unitPrice * newQuantity;
+            totalPriceElement.textContent = new Intl.NumberFormat('ko-KR').format(newTotalPrice) + '원';
+
+            // 전체 총 금액 재계산 및 업데이트
+            updateTotalPrice();
+
+            return response.text();
+          } else {
+            return response.text().then(errorMessage => {
+              alert(errorMessage || "수량 변경에 실패했습니다.");
+              // 실패 시 원래 값으로 복원
+              location.reload();
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("시스템 오류가 발생했습니다.");
+          location.reload();
+        });
+      }
+
+      // 전체 총 금액 재계산
+      function updateTotalPrice() {
+        const totalPriceDisplay = document.getElementById('total-price-display');
+        let total = 0;
+
+        // 각 상품의 단가와 수량을 곱해서 총액 계산
+        document.querySelectorAll('[id^="quantity-"]').forEach(input => {
+          const productId = input.getAttribute('data-product-id');
+          const quantity = parseInt(input.value) || 0;
+          const totalPriceElement = document.getElementById(`total-price-${productId}`);
+          
+          if (totalPriceElement) {
+            const unitPrice = parseInt(totalPriceElement.getAttribute('data-unit-price')) || 0;
+            total += unitPrice * quantity;
+          }
+        });
+
+        totalPriceDisplay.textContent = new Intl.NumberFormat('ko-KR').format(total) + '원';
+      }
+
+      // 페이지 로드 시 버튼 상태 초기화
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[id^="quantity-"]').forEach(input => {
+          const productId = input.getAttribute('data-product-id');
+          const currentQty = parseInt(input.value);
+          const maxQty = parseInt(input.getAttribute('data-max-quantity'));
+          
+          const btnDecrease = document.getElementById(`btn-decrease-${productId}`);
+          const btnIncrease = document.getElementById(`btn-increase-${productId}`);
+          
+          if (btnDecrease) btnDecrease.disabled = currentQty <= 1;
+          if (btnIncrease) btnIncrease.disabled = currentQty >= maxQty;
+        });
+      });
+
       function deleteItem(productId) {
         if (!confirm("해당 상품을 장바구니에서 삭제하시겠습니까?")) return;
 

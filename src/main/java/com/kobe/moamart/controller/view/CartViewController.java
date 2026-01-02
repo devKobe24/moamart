@@ -32,12 +32,15 @@ public class CartViewController {
         // 1. 세션에서 장바구니 목록 가져오기
         List<CartItem> cart = cartService.getCartFromSession(session);
 
-        // 2. 장바구니 총 금액 계산
+        // 2. 각 장바구니 아이템의 재고 수량 최신화 (실시간 재고 확인)
+        cartService.refreshCartItemStockQuantities(cart, session);
+
+        // 3. 장바구니 총 금액 계산
         long totalPrice = cart.stream()
                 .mapToLong(CartItem::getTotalPrice)
                 .sum();
 
-        // 3. 모델에 담기
+        // 4. 모델에 담기
         model.addAttribute("cart", cart);
         model.addAttribute("totalPrice", totalPrice);
 
