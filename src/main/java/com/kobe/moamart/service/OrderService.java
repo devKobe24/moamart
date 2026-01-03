@@ -4,6 +4,7 @@ import com.kobe.moamart.domain.order.entity.BagType;
 import com.kobe.moamart.domain.order.entity.Order;
 import com.kobe.moamart.domain.order.entity.OrderItem;
 import com.kobe.moamart.domain.order.entity.OrderStatus;
+import com.kobe.moamart.domain.order.repository.OrderItemRepository;
 import com.kobe.moamart.domain.order.repository.OrderRepository;
 import com.kobe.moamart.domain.product.entity.Product;
 import com.kobe.moamart.domain.product.repository.ProductRepository;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
 
@@ -100,9 +102,19 @@ public class OrderService {
 
     /**
      * 관리자용: 전체 주문 조회 (최신순)
+     * @param status 주문 상태 (null이면 전체 조회)
      */
-    public List<OrderListResponse> getOrderList() {
-        return orderRepository.findAll(Sort.by(Sort.Direction.DESC, "id")).stream()
+    public List<OrderListResponse> getOrderList(OrderStatus status) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "id");
+        List<Order> orders;
+        
+        if (status != null) {
+            orders = orderRepository.findByStatus(status, sort);
+        } else {
+            orders = orderRepository.findAll(sort);
+        }
+        
+        return orders.stream()
                 .map(OrderListResponse::new)
                 .collect(Collectors.toList());
     }
@@ -124,5 +136,56 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
         return new AdminOrderDetailResponse(order);
+    }
+
+    /**
+     * 관리자용: 주문 상품(OrderItem) 상태 변경
+     */
+    @Transactional
+    public void updateOrderItemStatus(Long orderItemId, OrderStatus status) {
+        OrderItem orderItem = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new IllegalArgumentException("주문 상품을 찾을 수 없습니다."));
+        orderItem.changeStatus(status);
+    }
+
+    /**
+     * 관리자용: 주문 상품(OrderItem) 수량 변경
+     */
+    @Transactional
+    public void updateOrderItemCount(Long orderItemId, int newCount) {
+        OrderItem orderItem = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new IllegalArgumentException("주문 상품을 찾을 수 없습니다."));
+        orderItem.changeCount(newCount);
+    }
+
+    /**
+     * 관리자용: OrderItem을 분리하고 상태를 변경
+     * 같은 상품의 일부만 다른 상태(반품, 교환 등)로 처리하기 위한 메서드
+     * 
+     * @param orderItemId 분리할 OrderItem ID
+     * @param splitCount 분리할 수량
+     * @param newStatus 분리된 Item의 상태 (RETURNED, EXCHANGE 등)
+     */
+    @Transactional
+    public void splitOrderItem(Long orderItemId, int splitCount, OrderStatus newStatus) {
+        OrderItem originalItem = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new IllegalArgumentException("주문 상품을 찾을 수 없습니다."));
+
+        // 분리 가능 여부 확인
+        if (splitCount >= originalItem.getCount() || splitCount <= 0) {
+            throw new IllegalArgumentException("분리할 수량이 올바르지 않습니다. (현재 수량: " + originalItem.getCount() + ")");
+        }
+
+        // OrderItem 분리
+        OrderItem splitItem = originalItem.split(splitCount);
+
+        // 분리된 Item의 상태 변경
+        splitItem.changeStatus(newStatus);
+
+        // 분리된 Item 저장
+        orderItemRepository.save(splitItem);
+
+        // 원본 Item도 저장 (수량이 변경되었으므로)
+        orderItemRepository.save(originalItem);
     }
 }

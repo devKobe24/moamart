@@ -30,8 +30,8 @@ public class CartApiController {
     @PostMapping("/add")
     public ResponseEntity<?> addCart(@Valid @RequestBody CartAddRequest request, HttpSession session) {
         try {
-            cartService.addCart(request.getProductId(), request.getQuantity(), session);
-            return ResponseEntity.ok("장바구니에 담겼습니다.");
+        cartService.addCart(request.getProductId(), request.getQuantity(), session);
+        return ResponseEntity.ok("장바구니에 담겼습니다.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

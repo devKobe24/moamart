@@ -86,6 +86,199 @@
       .btn-list:hover {
         background-color: #5a6268;
       }
+
+      .status-select {
+        padding: 6px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      /* 수량 조절기 스타일 */
+      .quantity-control {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+        background-color: white;
+        width: fit-content;
+        margin: 0 auto;
+      }
+
+      .quantity-control button {
+        width: 28px;
+        height: 28px;
+        background-color: #f9f9f9;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        color: #555;
+        transition: 0.1s;
+      }
+
+      .quantity-control button:hover {
+        background-color: #eee;
+      }
+
+      .quantity-control button:active {
+        background-color: #ddd;
+      }
+
+      .quantity-control button:disabled {
+        background-color: #f5f5f5;
+        color: #ccc;
+        cursor: not-allowed;
+      }
+
+      .quantity-control button:disabled:hover {
+        background-color: #f5f5f5;
+      }
+
+      .quantity-control input {
+        width: 40px;
+        height: 28px;
+        text-align: center;
+        border: none;
+        border-left: 1px solid #ddd;
+        border-right: 1px solid #ddd;
+        font-size: 14px;
+        font-weight: bold;
+        outline: none;
+        -moz-appearance: textfield;
+      }
+
+      .quantity-control input::-webkit-outer-spin-button,
+      .quantity-control input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      /* 분리 버튼 스타일 */
+      .split-btn {
+        padding: 4px 8px;
+        background-color: #ff9800;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        margin-left: 8px;
+        transition: background-color 0.2s;
+      }
+
+      .split-btn:hover {
+        background-color: #f57c00;
+      }
+
+      /* 교환 버튼 스타일 (분리 버튼과 동일한 UI, 초록색) */
+      .exchange-btn {
+        padding: 4px 8px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        margin-left: 8px;
+        transition: background-color 0.2s;
+      }
+
+      .exchange-btn:hover {
+        background-color: #218838;
+      }
+
+      /* 분리 모달 스타일 */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal-overlay.show {
+        display: flex;
+      }
+
+      .modal {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      .modal-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      .modal-form-group {
+        margin-bottom: 20px;
+      }
+
+      .modal-form-group label {
+        display: block;
+        font-size: 14px;
+        color: #555;
+        margin-bottom: 8px;
+        font-weight: 500;
+      }
+
+      .modal-form-group input,
+      .modal-form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: "Apple SD Gothic Neo", sans-serif;
+      }
+
+      .modal-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 25px;
+      }
+
+      .modal-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .modal-btn-cancel {
+        background-color: #f5f5f5;
+        color: #666;
+      }
+
+      .modal-btn-cancel:hover {
+        background-color: #e8e8e8;
+      }
+
+      .modal-btn-confirm {
+        background-color: #ff9800;
+        color: white;
+      }
+
+      .modal-btn-confirm:hover {
+        background-color: #f57c00;
+      }
     </style>
   </head>
   <body>
@@ -124,20 +317,68 @@
             2024-01-01
           </td>
         </tr>
+        <tr th:if="${order.pickupDateTime != null}">
+          <th>픽업 예정 일시</th>
+          <td
+            th:text="${#temporals.format(order.pickupDateTime, 'yyyy-MM-dd HH:mm')}"
+          >
+            2024-01-01 14:00
+          </td>
+        </tr>
       </table>
 
       <h2>주문 상품</h2>
+
+      <!-- 상품 상태 필터 -->
+      <div
+        style="
+          margin-bottom: 15px;
+          padding: 15px;
+          background: #f9f9f9;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+        "
+      >
+        <label style="font-weight: bold; color: #555; margin-right: 10px"
+          >상품 상태 필터:</label
+        >
+        <select
+          id="item-status-filter"
+          style="
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+          "
+          onchange="filterOrderItems()"
+        >
+          <option value="">전체</option>
+          <option value="ORDER">주문완료</option>
+          <option value="PREPARING">상품준비중</option>
+          <option value="READY_FOR_PICKUP">상품준비완료</option>
+          <option value="PICKUP_COMPLETED">픽업완료</option>
+          <option value="RETURNED">반품완료</option>
+          <option value="EXCHANGE">상품교환</option>
+          <option value="CANCEL">주문취소</option>
+        </select>
+      </div>
+
       <table class="item-table">
         <thead>
           <tr>
             <th>상품명</th>
             <th>단가</th>
             <th>수량</th>
+            <th>상품 상태</th>
             <th>금액</th>
           </tr>
         </thead>
-        <tbody>
-          <tr th:each="item : ${order.orderItems}">
+        <tbody id="order-items-tbody">
+          <tr
+            th:each="item : ${order.orderItems}"
+            th:data-item-status="${item.status.name()}"
+            class="order-item-row"
+          >
             <td th:text="${item.productName}" style="text-align: left">
               고래밥
             </td>
@@ -146,8 +387,113 @@
             >
               1,000
             </td>
-            <td th:text="${item.count} + '개'">2개</td>
+            <td>
+              <div class="quantity-control">
+                <button
+                  type="button"
+                  th:id="'btn-decrease-item-' + ${item.id}"
+                  th:onclick="'changeItemQuantity(' + ${item.id} + ', -1)'"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  th:id="'quantity-item-' + ${item.id}"
+                  th:value="${item.count}"
+                  th:attr="data-item-id=${item.id}, data-item-price=${item.orderPrice}"
+                  min="1"
+                  readonly
+                  onchange="updateItemQuantityDirect(this)"
+                />
+                <button
+                  type="button"
+                  th:id="'btn-increase-item-' + ${item.id}"
+                  th:onclick="'changeItemQuantity(' + ${item.id} + ', 1)'"
+                >
+                  +
+                </button>
+              </div>
+            </td>
+            <td style="position: relative;">
+              <select
+                class="status-select"
+                th:data-item-id="${item.id}"
+                onchange="updateOrderItemStatus(this)"
+              >
+                <option
+                  value="ORDER"
+                  th:selected="${item.status.name() == 'ORDER'}"
+                >
+                  주문완료
+                </option>
+                <option
+                  value="PREPARING"
+                  th:selected="${item.status.name() == 'PREPARING'}"
+                >
+                  상품준비중
+                </option>
+                <option
+                  value="READY_FOR_PICKUP"
+                  th:selected="${item.status.name() == 'READY_FOR_PICKUP'}"
+                >
+                  상품준비완료
+                </option>
+                <option
+                  value="PICKUP_COMPLETED"
+                  th:selected="${item.status.name() == 'PICKUP_COMPLETED'}"
+                >
+                  픽업완료
+                </option>
+                <option
+                  value="RETURNED"
+                  th:selected="${item.status.name() == 'RETURNED'}"
+                >
+                  반품
+                </option>
+                <option
+                  value="EXCHANGE"
+                  th:selected="${item.status.name() == 'EXCHANGE'}"
+                >
+                  상품교환
+                </option>
+                <option
+                  value="CANCEL"
+                  th:selected="${item.status.name() == 'CANCEL'}"
+                >
+                  주문취소
+                </option>
+              </select>
+              <!-- 분리 버튼 (상태가 EXCHANGE가 아닐 때만 표시) -->
+              <button
+                th:unless="${item.status == T(com.kobe.moamart.domain.order.entity.OrderStatus).EXCHANGE}"
+                type="button"
+                class="split-btn"
+                th:data-item-id="${item.id}"
+                th:data-item-count="${item.count}"
+                th:data-item-status="${item.status.name()}"
+                onclick="openSplitModalFromButton(this)"
+                title="상품 분리 (부분 반품/교환)"
+              >
+                분리
+              </button>
+              <!-- 교환 버튼 (상태가 EXCHANGE일 때만 표시) -->
+              <button
+                th:if="${item.status == T(com.kobe.moamart.domain.order.entity.OrderStatus).EXCHANGE}"
+                type="button"
+                class="exchange-btn"
+                th:data-item-id="${item.id}"
+                th:data-item-count="${item.count}"
+                th:data-item-status="${item.status.name()}"
+                onclick="openSplitModalFromButton(this)"
+                title="상품 분리 (부분 반품/교환)"
+              >
+                교환
+              </button>
+            </td>
             <td
+              th:id="'item-total-price-' + ${item.id}"
+              th:data-item-price="${item.orderPrice}"
+              th:data-item-count="${item.count}"
               th:text="${#numbers.formatInteger(item.totalPrice, 0, 'COMMA')} + '원'"
             >
               2,000원
@@ -158,7 +504,7 @@
 
       <div class="total-price">
         총 결제금액:
-        <span
+        <span id="final-total-price" th:data-base-total="${order.totalPrice}"
           th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')} + '원'"
           >15,000원</span
         >
@@ -168,5 +514,320 @@
         <a href="/admin/orders" class="btn-list">목록으로 돌아가기</a>
       </div>
     </div>
+
+    <!-- 분리 모달 -->
+    <div class="modal-overlay" id="splitModal">
+      <div class="modal">
+        <div class="modal-title">상품 분리</div>
+        <form id="splitForm" onsubmit="handleSplitSubmit(event)">
+          <input type="hidden" id="split-item-id" />
+          <div class="modal-form-group">
+            <label for="split-count">분리할 수량</label>
+            <input
+              type="number"
+              id="split-count"
+              min="1"
+              required
+              onchange="validateSplitCount()"
+            />
+            <span id="split-count-hint" style="font-size: 12px; color: #666; margin-top: 4px; display: block;"></span>
+          </div>
+          <div class="modal-form-group">
+            <label for="split-status">상태 선택</label>
+            <select id="split-status" required>
+              <option value="ORDER">주문완료</option>
+              <option value="PREPARING">상품준비중</option>
+              <option value="READY_FOR_PICKUP">상품준비완료</option>
+              <option value="PICKUP_COMPLETED">픽업완료</option>
+              <option value="RETURNED">반품</option>
+              <option value="EXCHANGE">상품교환</option>
+              <option value="CANCEL">주문취소</option>
+              <option value="OUT_OF_STOCK">품절</option>
+            </select>
+          </div>
+          <div class="modal-buttons">
+            <button type="button" class="modal-btn modal-btn-cancel" onclick="closeSplitModal()">
+              취소
+            </button>
+            <button type="submit" class="modal-btn modal-btn-confirm">
+              분리하기
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // 상품 상태로 필터링
+      function filterOrderItems() {
+        const selectedStatus =
+          document.getElementById("item-status-filter").value;
+        const rows = document.querySelectorAll(".order-item-row");
+
+        rows.forEach((row) => {
+          const itemStatus = row.getAttribute("data-item-status");
+          if (selectedStatus === "" || itemStatus === selectedStatus) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
+        
+        // 총 결제 금액 재계산
+        updateFinalTotalPrice();
+      }
+
+      // 수량 변경 함수
+      function changeItemQuantity(itemId, change) {
+        const quantityInput = document.getElementById(`quantity-item-${itemId}`);
+        const currentQty = parseInt(quantityInput.value);
+        
+        let newQty = currentQty + change;
+        if (newQty < 1) {
+          newQty = 1;
+        }
+
+        updateItemQuantity(itemId, newQty);
+      }
+
+      // 직접 입력 시 수량 업데이트
+      function updateItemQuantityDirect(input) {
+        const itemId = input.getAttribute('data-item-id');
+        const newQty = parseInt(input.value);
+
+        let validQty = newQty;
+        if (validQty < 1) {
+          validQty = 1;
+          input.value = 1;
+        }
+
+        updateItemQuantity(itemId, validQty);
+      }
+
+      // OrderItem 수량 업데이트 API 호출
+      function updateItemQuantity(itemId, newQuantity) {
+        const quantityInput = document.getElementById(`quantity-item-${itemId}`);
+        const itemPriceElement = document.getElementById(`item-total-price-${itemId}`);
+        const itemPrice = parseInt(itemPriceElement.getAttribute('data-item-price'));
+
+        fetch(`/admin/orders/items/${itemId}/count`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            count: newQuantity
+          })
+        })
+        .then((response) => {
+          if (response.ok) {
+            // 수량 업데이트
+            quantityInput.value = newQuantity;
+            itemPriceElement.setAttribute('data-item-count', newQuantity);
+
+            // 해당 상품의 총 가격 업데이트
+            const newTotalPrice = itemPrice * newQuantity;
+            itemPriceElement.textContent = new Intl.NumberFormat('ko-KR').format(newTotalPrice) + '원';
+
+            // 총 결제 금액 재계산
+            updateFinalTotalPrice();
+          } else {
+            return response.text().then(errorMessage => {
+              alert(errorMessage || "수량 변경에 실패했습니다.");
+              location.reload();
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("시스템 오류가 발생했습니다.");
+          location.reload();
+        });
+      }
+
+      // 총 결제 금액 재계산 (반품/취소 상품 제외)
+      function updateFinalTotalPrice() {
+        let total = 0;
+
+        document.querySelectorAll('.order-item-row').forEach(row => {
+          // 숨겨진 행은 제외
+          if (row.style.display === 'none') {
+            return;
+          }
+
+          const itemStatus = row.getAttribute('data-item-status');
+          const itemPriceElement = row.querySelector('[id^="item-total-price-"]');
+          
+          if (itemPriceElement) {
+            // 현재 표시된 금액 사용 (수량 변경 후 반영된 값)
+            const currentPriceText = itemPriceElement.textContent.replace(/[^0-9]/g, '');
+            const currentPrice = parseInt(currentPriceText) || 0;
+            
+            // RETURNED 또는 CANCEL 상태인 경우 총액에서 제외
+            if (itemStatus !== 'RETURNED' && itemStatus !== 'CANCEL') {
+              total += currentPrice;
+            }
+          }
+        });
+
+        // 총 결제 금액 업데이트
+        document.getElementById('final-total-price').textContent = 
+          new Intl.NumberFormat('ko-KR').format(total) + '원';
+      }
+
+      // 페이지 로드 시 초기 총액 계산
+      document.addEventListener('DOMContentLoaded', function() {
+        updateFinalTotalPrice();
+      });
+
+      // 분리 모달 관련 함수
+      function openSplitModalFromButton(buttonElement) {
+        const itemId = buttonElement.getAttribute('data-item-id');
+        const maxCount = parseInt(buttonElement.getAttribute('data-item-count'));
+        const currentStatus = buttonElement.getAttribute('data-item-status');
+        openSplitModal(itemId, maxCount, currentStatus);
+      }
+
+      function openSplitModal(itemId, maxCount, currentStatus) {
+        document.getElementById('split-item-id').value = itemId;
+        const splitCountInput = document.getElementById('split-count');
+        splitCountInput.max = maxCount - 1; // 최대 수량은 현재 수량 - 1
+        splitCountInput.value = 1;
+        updateSplitCountHint(maxCount);
+        // 현재 상품의 상태를 기본값으로 설정
+        const statusSelect = document.getElementById('split-status');
+        if (currentStatus && statusSelect.querySelector(`option[value="${currentStatus}"]`)) {
+          statusSelect.value = currentStatus;
+        } else {
+          statusSelect.value = '';
+        }
+        document.getElementById('splitModal').classList.add('show');
+      }
+
+      function closeSplitModal() {
+        document.getElementById('splitModal').classList.remove('show');
+      }
+
+      function validateSplitCount() {
+        const splitCountInput = document.getElementById('split-count');
+        const maxCount = parseInt(splitCountInput.max);
+        const currentCount = parseInt(splitCountInput.value);
+        updateSplitCountHint(maxCount + 1);
+        
+        if (currentCount > maxCount) {
+          splitCountInput.value = maxCount;
+          alert('분리할 수량은 현재 수량보다 작아야 합니다.');
+        }
+        if (currentCount < 1) {
+          splitCountInput.value = 1;
+        }
+      }
+
+      function updateSplitCountHint(maxCount) {
+        const hint = document.getElementById('split-count-hint');
+        const splitCountInput = document.getElementById('split-count');
+        const currentValue = parseInt(splitCountInput.value) || 1;
+        hint.textContent = `(최대 ${splitCountInput.max}개, 현재 수량: ${maxCount}개)`;
+      }
+
+      function handleSplitSubmit(event) {
+        event.preventDefault();
+        
+        const itemId = document.getElementById('split-item-id').value;
+        const splitCount = parseInt(document.getElementById('split-count').value);
+        const status = document.getElementById('split-status').value;
+        
+        if (!status) {
+          alert('상태를 선택해주세요.');
+          return;
+        }
+
+        if (!confirm(`상품을 ${splitCount}개 분리하여 상태를 "${status}"로 변경하시겠습니까?`)) {
+          return;
+        }
+
+        fetch(`/admin/orders/items/${itemId}/split`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            splitCount: splitCount,
+            status: status
+          })
+        })
+        .then(response => {
+          if (response.ok) {
+            alert('상품이 분리되었습니다.');
+            location.reload();
+          } else {
+            return response.text().then(errorMessage => {
+              alert(errorMessage || '분리에 실패했습니다.');
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('시스템 오류가 발생했습니다.');
+        });
+      }
+
+      // 모달 외부 클릭 시 닫기
+      document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('splitModal');
+        if (modal) {
+          modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+              closeSplitModal();
+            }
+          });
+        }
+      });
+
+      function updateOrderItemStatus(selectElement) {
+        const itemId = selectElement.getAttribute("data-item-id");
+        const newStatus = selectElement.value;
+
+        if (!confirm(`상품 상태를 변경하시겠습니까?`)) {
+          location.reload(); // 취소 시 원래 값 복구
+          return;
+        }
+
+        fetch(`/admin/orders/items/${itemId}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              // 상태 업데이트 후 행의 data-item-status 속성도 업데이트
+              const row = selectElement.closest('.order-item-row');
+              row.setAttribute('data-item-status', newStatus);
+              
+              alert("상품 상태가 변경되었습니다.");
+              
+              // 상태가 EXCHANGE로 변경된 경우 페이지 새로고침하여 버튼이 자연스럽게 변경되도록
+              if (newStatus === 'EXCHANGE') {
+                location.reload();
+                return;
+              }
+              
+              // 총 결제 금액 재계산
+              updateFinalTotalPrice();
+              
+              // 필터가 적용되어 있다면 필터링도 다시 적용
+              filterOrderItems();
+            } else {
+              alert("변경 실패!");
+              location.reload();
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+            alert("시스템 오류");
+            location.reload();
+          });
+      }
+    </script>
   </body>
 </html>

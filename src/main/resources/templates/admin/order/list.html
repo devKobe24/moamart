@@ -92,16 +92,106 @@
 
       <h1>🚚 주문 관리 리스트</h1>
 
+      <!-- 검색/필터 박스 -->
+      <div
+        style="
+          margin-bottom: 20px;
+          padding: 20px;
+          background: #f9f9f9;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+        "
+      >
+        <form
+          method="get"
+          action="/admin/orders"
+          style="display: flex; gap: 10px; align-items: center"
+        >
+          <label style="font-weight: bold; color: #555">주문 상태:</label>
+          <select
+            name="status"
+            style="padding: 8px; border: 1px solid #ccc; border-radius: 4px"
+          >
+            <option value="">전체</option>
+            <option
+              value="ORDER"
+              th:selected="${selectedStatus?.name() == 'ORDER'}"
+            >
+              주문완료
+            </option>
+            <option
+              value="PREPARING"
+              th:selected="${selectedStatus?.name() == 'PREPARING'}"
+            >
+              상품준비중
+            </option>
+            <option
+              value="READY_FOR_PICKUP"
+              th:selected="${selectedStatus?.name() == 'READY_FOR_PICKUP'}"
+            >
+              상품준비완료
+            </option>
+            <option
+              value="PICKUP_COMPLETED"
+              th:selected="${selectedStatus?.name() == 'PICKUP_COMPLETED'}"
+            >
+              픽업완료
+            </option>
+            <option
+              value="RETURNED"
+              th:selected="${selectedStatus?.name() == 'RETURNED'}"
+            >
+              반품완료
+            </option>
+            <option
+              value="EXCHANGE"
+              th:selected="${selectedStatus?.name() == 'EXCHANGE'}"
+            >
+              상품교환
+            </option>
+            <option
+              value="OUT_OF_STOCK"
+              th:selected="${selectedStatus?.name() == 'OUT_OF_STOCK'}"
+            >
+              품절
+            </option>
+            <option
+              value="CANCEL"
+              th:selected="${selectedStatus?.name() == 'CANCEL'}"
+            >
+              주문취소
+            </option>
+          </select>
+          <button
+            type="submit"
+            style="
+              padding: 8px 15px;
+              background-color: #6c757d;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+            "
+          >
+            검색
+          </button>
+        </form>
+      </div>
+
       <table>
         <thead>
           <tr>
-            <th style="width: 5%">ID</th>
-            <th style="width: 15%">주문일시</th>
-            <th style="width: 10%">주문자</th>
-            <th style="width: 30%">상품 정보</th>
-            <th style="width: 10%">결제금액</th>
-            <th style="width: 15%">상태 변경</th>
-            <th style="width: 10%">관리</th>
+            <th style="width: 4%">ID</th>
+            <th style="width: 10%">주문일시</th>
+            <th style="width: 10%">픽업 예정 일시</th>
+            <th style="width: 7%">주문자</th>
+            <th style="width: 18%">상품 정보</th>
+            <th style="width: 8%">결제금액</th>
+            <th style="width: 8%">반품 금액</th>
+            <th style="width: 8%">취소 금액</th>
+            <th style="width: 8%">총 결제 금액</th>
+            <th style="width: 12%">상태 변경</th>
+            <th style="width: 9%">관리</th>
           </tr>
         </thead>
         <tbody>
@@ -111,6 +201,18 @@
               th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm')}"
             >
               2024-01-01 12:00
+            </td>
+            <td
+              th:if="${order.pickupDateTime != null}"
+              th:text="${#temporals.format(order.pickupDateTime, 'yyyy-MM-dd HH:mm')}"
+            >
+              2024-01-01 14:00
+            </td>
+            <td
+              th:unless="${order.pickupDateTime != null}"
+              style="color: #999;"
+            >
+              -
             </td>
             <td th:text="${order.recipientName}">홍길동</td>
             <td
@@ -123,6 +225,38 @@
               th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')} + '원'"
             >
               15,000원
+            </td>
+            <td
+              th:if="${order.returnedAmount > 0}"
+              style="color: #d32f2f;"
+              th:text="'-' + ${#numbers.formatInteger(order.returnedAmount, 0, 'COMMA')} + '원'"
+            >
+              -5,000원
+            </td>
+            <td
+              th:unless="${order.returnedAmount > 0}"
+              style="color: #999;"
+            >
+              -
+            </td>
+            <td
+              th:if="${order.cancelAmount > 0}"
+              style="color: #d32f2f;"
+              th:text="'-' + ${#numbers.formatInteger(order.cancelAmount, 0, 'COMMA')} + '원'"
+            >
+              -3,000원
+            </td>
+            <td
+              th:unless="${order.cancelAmount > 0}"
+              style="color: #999;"
+            >
+              -
+            </td>
+            <td
+              th:text="${#numbers.formatInteger(order.finalPaymentAmount, 0, 'COMMA')} + '원'"
+              style="font-weight: bold; color: #007bff;"
+            >
+              12,000원
             </td>
 
             <td>
@@ -138,16 +272,34 @@
                   주문완료
                 </option>
                 <option
-                  value="DELIVERY"
-                  th:selected="${order.status.name() == 'DELIVERY'}"
+                  value="PREPARING"
+                  th:selected="${order.status.name() == 'PREPARING'}"
                 >
-                  배송중
+                  상품준비중
                 </option>
                 <option
-                  value="COMPLETED"
-                  th:selected="${order.status.name() == 'COMPLETED'}"
+                  value="READY_FOR_PICKUP"
+                  th:selected="${order.status.name() == 'READY_FOR_PICKUP'}"
                 >
-                  배송완료
+                  상품준비완료
+                </option>
+                <option
+                  value="RETURNED"
+                  th:selected="${order.status.name() == 'RETURNED'}"
+                >
+                  반품
+                </option>
+                <option
+                  value="EXCHANGE"
+                  th:selected="${order.status.name() == 'EXCHANGE'}"
+                >
+                  상품교환
+                </option>
+                <option
+                  value="OUT_OF_STOCK"
+                  th:selected="${order.status.name() == 'OUT_OF_STOCK'}"
+                >
+                  품절
                 </option>
                 <option
                   value="CANCEL"

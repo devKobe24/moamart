@@ -631,36 +631,36 @@
           }
 
           // ✨ 수량 변경 및 가격 계산 함수
-          function changeQuantity(change) {
-              const quantityInput = document.getElementById('quantity');
-              const priceDisplay = document.getElementById('totalPriceDisplay');
+      function changeQuantity(change) {
+          const quantityInput = document.getElementById('quantity');
+          const priceDisplay = document.getElementById('totalPriceDisplay');
               const btnDecrease = document.getElementById('btn-decrease');
               const btnIncrease = document.getElementById('btn-increase');
 
-              // 1. 현재 값 가져오기
-              let currentQty = parseInt(quantityInput.value);
-              // data-unit-price 속성에서 단가(숫자)를 가져옴
-              const unitPrice = parseInt(priceDisplay.getAttribute('data-unit-price'));
+          // 1. 현재 값 가져오기
+          let currentQty = parseInt(quantityInput.value);
+          // data-unit-price 속성에서 단가(숫자)를 가져옴
+          const unitPrice = parseInt(priceDisplay.getAttribute('data-unit-price'));
               // 최대 수량 가져오기 (입고량)
               const maxQuantity = parseInt(quantityInput.getAttribute('data-max-quantity')) || parseInt(quantityInput.max);
 
               // 2. 수량 변경 (최소 1개, 최대 입고량 유지)
-              let newQty = currentQty + change;
-              if (newQty < 1) {
-                  newQty = 1; // 1 미만으로 내려가지 않게 방지
-              }
+          let newQty = currentQty + change;
+          if (newQty < 1) {
+              newQty = 1; // 1 미만으로 내려가지 않게 방지
+          }
               if (newQty > maxQuantity) {
                   newQty = maxQuantity; // 입고량을 초과하지 않게 방지
               }
 
-              // 3. 화면 업데이트 (Input)
-              quantityInput.value = newQty;
+          // 3. 화면 업데이트 (Input)
+          quantityInput.value = newQty;
 
-              // 4. 총 금액 계산 및 업데이트
-              const totalPrice = newQty * unitPrice;
+          // 4. 총 금액 계산 및 업데이트
+          const totalPrice = newQty * unitPrice;
 
-              // 숫자를 '246,400원' 형식으로 포맷팅 (Intl.NumberFormat 사용)
-              priceDisplay.innerText = new Intl.NumberFormat('ko-KR').format(totalPrice) + '원';
+          // 숫자를 '246,400원' 형식으로 포맷팅 (Intl.NumberFormat 사용)
+          priceDisplay.innerText = new Intl.NumberFormat('ko-KR').format(totalPrice) + '원';
 
               // 5. 버튼 상태 업데이트
               updateButtonStates(newQty, maxQuantity, btnDecrease, btnIncrease);

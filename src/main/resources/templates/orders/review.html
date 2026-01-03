@@ -149,6 +149,65 @@
         color: #dc3545;
       }
 
+      /* 수량 조절기 스타일 */
+      .quantity-control {
+        display: flex;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+        background-color: white;
+        width: fit-content;
+      }
+
+      .quantity-control button {
+        width: 28px;
+        height: 28px;
+        background-color: #f9f9f9;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        color: #555;
+        transition: 0.1s;
+      }
+
+      .quantity-control button:hover {
+        background-color: #eee;
+      }
+
+      .quantity-control button:active {
+        background-color: #ddd;
+      }
+
+      .quantity-control button:disabled {
+        background-color: #f5f5f5;
+        color: #ccc;
+        cursor: not-allowed;
+      }
+
+      .quantity-control button:disabled:hover {
+        background-color: #f5f5f5;
+      }
+
+      .quantity-control input {
+        width: 40px;
+        height: 28px;
+        text-align: center;
+        border: none;
+        border-left: 1px solid #ddd;
+        border-right: 1px solid #ddd;
+        font-size: 14px;
+        font-weight: bold;
+        outline: none;
+        -moz-appearance: textfield;
+      }
+
+      .quantity-control input::-webkit-outer-spin-button,
+      .quantity-control input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
       /* 봉투 선택 */
       .bag-options {
         display: flex;
@@ -246,6 +305,27 @@
         cursor: not-allowed;
       }
 
+      .continue-shopping-btn {
+        width: 100%;
+        padding: 16px;
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        margin-top: 12px;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+      }
+
+      .continue-shopping-btn:hover {
+        background-color: #28a745;
+      }
+
       .error-msg {
         background-color: #ffebee;
         color: #c62828;
@@ -336,12 +416,48 @@
               </div>
               <div class="product-details">
                 <div class="product-name" th:text="${item.name}"></div>
-                <div class="product-info">
-                  <span th:text="'수량: ' + ${item.quantity} + '개'"></span>
+                <div
+                  class="product-info"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    margin-top: 8px;
+                  "
+                >
+                  <span style="font-size: 0.85em; color: #6b7280">수량:</span>
+                  <div class="quantity-control">
+                    <button
+                      type="button"
+                      th:id="'btn-decrease-' + ${item.productId}"
+                      th:onclick="'changeQuantity(' + ${item.productId} + ', -1)'"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      th:id="'quantity-' + ${item.productId}"
+                      th:value="${item.quantity}"
+                      th:attr="data-product-id=${item.productId}, data-max-quantity=${item.stockQuantity}"
+                      min="1"
+                      th:max="${item.stockQuantity}"
+                      readonly
+                      onchange="updateQuantityDirect(this)"
+                    />
+                    <button
+                      type="button"
+                      th:id="'btn-increase-' + ${item.productId}"
+                      th:onclick="'changeQuantity(' + ${item.productId} + ', 1)'"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="product-price">
                 <div
+                  th:id="'product-total-price-' + ${item.productId}"
+                  th:data-unit-price="${item.price}"
                   th:text="'₩' + ${#numbers.formatInteger(item.getTotalPrice(), 0, 'COMMA')}"
                 ></div>
               </div>
@@ -401,6 +517,7 @@
           >
             주문하기 (<span th:text="${cart.size()}">0</span>)
           </button>
+          <a href="/" class="continue-shopping-btn">계속 쇼핑하기</a>
         </div>
       </div>
     </div>
@@ -409,13 +526,30 @@
       let selectedStoreId = null;
       let selectedBagType = "NONE";
 
-      // 페이지 로드 시 첫 번째 매장 선택
+      // 페이지 로드 시 첫 번째 매장 선택 및 수량 조절기 버튼 상태 초기화
       document.addEventListener("DOMContentLoaded", function () {
         const firstStore = document.querySelector(".store-card");
         if (firstStore) {
           selectedStoreId = firstStore.getAttribute("data-store-id");
         }
         calculateFinalPrice();
+
+        // 수량 조절기 버튼 상태 초기화
+        document.querySelectorAll('[id^="quantity-"]').forEach((input) => {
+          const productId = input.getAttribute("data-product-id");
+          const currentQty = parseInt(input.value);
+          const maxQty = parseInt(input.getAttribute("data-max-quantity"));
+
+          const btnDecrease = document.getElementById(
+            `btn-decrease-${productId}`
+          );
+          const btnIncrease = document.getElementById(
+            `btn-increase-${productId}`
+          );
+
+          if (btnDecrease) btnDecrease.disabled = currentQty <= 1;
+          if (btnIncrease) btnIncrease.disabled = currentQty >= maxQty;
+        });
       });
 
       // 매장 선택
@@ -478,6 +612,127 @@
         const finalPrice = totalProductPrice + bagPrice;
         document.getElementById("final-price").textContent =
           "₩" + finalPrice.toLocaleString("ko-KR");
+      }
+
+      // 수량 변경 함수
+      function changeQuantity(productId, change) {
+        const quantityInput = document.getElementById(`quantity-${productId}`);
+        const currentQty = parseInt(quantityInput.value);
+        const maxQty = parseInt(
+          quantityInput.getAttribute("data-max-quantity")
+        );
+
+        let newQty = currentQty + change;
+        if (newQty < 1) {
+          newQty = 1;
+        }
+        if (newQty > maxQty) {
+          newQty = maxQty;
+        }
+
+        // 수량 업데이트
+        updateCartQuantity(productId, newQty);
+      }
+
+      // 직접 입력 시 수량 업데이트
+      function updateQuantityDirect(input) {
+        const productId = input.getAttribute("data-product-id");
+        const newQty = parseInt(input.value);
+        const maxQty = parseInt(input.getAttribute("data-max-quantity"));
+
+        let validQty = newQty;
+        if (validQty < 1) {
+          validQty = 1;
+          input.value = 1;
+        }
+        if (validQty > maxQty) {
+          validQty = maxQty;
+          input.value = maxQty;
+        }
+
+        updateCartQuantity(productId, validQty);
+      }
+
+      // 장바구니 수량 업데이트 API 호출
+      function updateCartQuantity(productId, newQuantity) {
+        const quantityInput = document.getElementById(`quantity-${productId}`);
+        const btnDecrease = document.getElementById(
+          `btn-decrease-${productId}`
+        );
+        const btnIncrease = document.getElementById(
+          `btn-increase-${productId}`
+        );
+        const productPriceElement = document.getElementById(
+          `product-total-price-${productId}`
+        );
+        const maxQty = parseInt(
+          quantityInput.getAttribute("data-max-quantity")
+        );
+
+        fetch(`/api/cart/${productId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            quantity: newQuantity,
+          }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              // 수량 업데이트
+              quantityInput.value = newQuantity;
+
+              // 버튼 상태 업데이트
+              btnDecrease.disabled = newQuantity <= 1;
+              btnIncrease.disabled = newQuantity >= maxQty;
+
+              // 해당 상품의 총 가격 업데이트
+              const unitPrice = parseInt(
+                productPriceElement.getAttribute("data-unit-price")
+              );
+              const newTotalPrice = unitPrice * newQuantity;
+              productPriceElement.textContent =
+                "₩" + newTotalPrice.toLocaleString("ko-KR");
+
+              // 전체 상품 금액 재계산 및 업데이트
+              updateTotalProductPrice();
+
+              return response.text();
+            } else {
+              return response.text().then((errorMessage) => {
+                alert(errorMessage || "수량 변경에 실패했습니다.");
+                // 실패 시 페이지 새로고침
+                location.reload();
+              });
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("시스템 오류가 발생했습니다.");
+            location.reload();
+          });
+      }
+
+      // 전체 상품 금액 재계산
+      function updateTotalProductPrice() {
+        const totalProductPriceElement = document.getElementById(
+          "total-product-price"
+        );
+        let total = 0;
+
+        document
+          .querySelectorAll('[id^="product-total-price-"]')
+          .forEach((element) => {
+            const priceText = element.textContent.replace(/[^0-9]/g, "");
+            total += parseInt(priceText) || 0;
+          });
+
+        totalProductPriceElement.textContent =
+          "₩" + total.toLocaleString("ko-KR");
+
+        // 최종 결제 금액도 업데이트
+        calculateFinalPrice();
       }
 
       // 주문하기 버튼 클릭

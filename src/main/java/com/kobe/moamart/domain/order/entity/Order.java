@@ -93,7 +93,7 @@ public class Order extends BaseTimeEntity {
     // 전체 주문 가격 조회
     public int getTotalPrice() {
         return orderItems.stream()
-                .mapToInt(OrderItem::getOrderPrice)
+                .mapToInt(OrderItem::getTotalPrice) // getTotalPrice() = orderPrice * count
                 .sum();
     }
 

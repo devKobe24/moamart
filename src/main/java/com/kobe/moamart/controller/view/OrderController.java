@@ -49,6 +49,9 @@ public class OrderController {
             return "redirect:/cart";
         }
 
+        // 각 장바구니 아이템의 재고 수량 최신화 (실시간 재고 확인)
+        cartService.refreshCartItemStockQuantities(cart, session);
+
         // 활성화된 매장 목록 조회
         var stores = storeService.getActiveStores();
         if (stores.isEmpty()) {

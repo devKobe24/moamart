@@ -13,7 +13,11 @@ package com.kobe.moamart.domain.order.entity;
  */
 public enum OrderStatus {
     ORDER, // 주문 완료
-    CANCEL, // 주문 취소
-    DELIVERY, // 배송 중
-    COMPLETED // 배송 완료
+    PREPARING, // 상품 준비중
+    READY_FOR_PICKUP, // 상품 준비 완료
+    PICKUP_COMPLETED, // 픽업 완료
+    RETURNED ,// 반품 완료
+    EXCHANGE, // 상품 교환
+    OUT_OF_STOCK, // 품절
+    CANCEL // 주문 취소
 }
