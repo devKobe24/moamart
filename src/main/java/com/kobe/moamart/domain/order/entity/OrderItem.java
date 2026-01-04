@@ -79,6 +79,22 @@ public class OrderItem {
         this.count = count;
     }
 
+    // 상품 변경 (교환 시 사용)
+    public void changeProduct(Product product) {
+        if (product == null) {
+            throw new IllegalArgumentException("상품은 null일 수 없습니다.");
+        }
+        this.product = product;
+    }
+
+    // 가격 변경 (교환 시 사용)
+    public void changeOrderPrice(int price) {
+        if (price < 0) {
+            throw new IllegalArgumentException("가격은 0 이상이어야 합니다.");
+        }
+        this.orderPrice = price;
+    }
+
     /**
      * OrderItem을 분리하여 새로운 OrderItem을 생성
      * 같은 상품의 일부만 다른 상태로 처리하기 위한 메서드

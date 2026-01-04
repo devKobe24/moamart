@@ -1,6 +1,7 @@
 package com.kobe.moamart.controller.admin;
 
 import com.kobe.moamart.domain.order.entity.OrderStatus;
+import com.kobe.moamart.domain.product.repository.ProductRepository;
 import com.kobe.moamart.dto.response.AdminOrderDetailResponse;
 import com.kobe.moamart.dto.response.OrderListResponse;
 import com.kobe.moamart.service.OrderService;
@@ -30,6 +31,7 @@ import java.util.Map;
 public class AdminOrderController {
 
     private final OrderService orderService;
+    private final ProductRepository productRepository;
 
     /**
      * 주문 목록 페이지
@@ -75,6 +77,8 @@ public class AdminOrderController {
     public String detail(@PathVariable Long id, Model model) {
         AdminOrderDetailResponse order = orderService.getOrderDetail(id);
         model.addAttribute("order", order);
+        // 교환 모달에서 상품 선택을 위한 전체 상품 목록 전달
+        model.addAttribute("products", productRepository.findAll());
         return "admin/order/detail"; // templates/admin/order/detail.html
     }
 
@@ -145,6 +149,55 @@ public class AdminOrderController {
             orderService.splitOrderItem(itemId, splitCount, newStatus);
             
             return ResponseEntity.ok("상품이 분리되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    /**
+     * OrderItem 교환 정보 업데이트 API
+     * PATCH /admin/orders/items/{itemId}/exchange
+     * Body: { "productName": "새 상품명", "orderPrice": 10000, "count": 2 }
+     */
+    @PatchMapping("/items/{itemId}/exchange")
+    @ResponseBody
+    public ResponseEntity<?> updateOrderItemExchange(
+            @PathVariable Long itemId,
+            @RequestBody Map<String, Object> request
+    ) {
+        try {
+            String productName = (String) request.get("productName");
+            
+            Integer orderPrice = null;
+            Object orderPriceObj = request.get("orderPrice");
+            if (orderPriceObj instanceof Integer) {
+                orderPrice = (Integer) orderPriceObj;
+            } else if (orderPriceObj instanceof Number) {
+                orderPrice = ((Number) orderPriceObj).intValue();
+            }
+
+            Integer count = null;
+            Object countObj = request.get("count");
+            if (countObj instanceof Integer) {
+                count = (Integer) countObj;
+            } else if (countObj instanceof Number) {
+                count = ((Number) countObj).intValue();
+            }
+
+            if (productName == null || productName.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("상품명이 필요합니다.");
+            }
+            if (orderPrice == null) {
+                return ResponseEntity.badRequest().body("가격이 필요합니다.");
+            }
+            if (count == null) {
+                return ResponseEntity.badRequest().body("수량이 필요합니다.");
+            }
+
+            orderService.updateOrderItemExchange(itemId, productName.trim(), orderPrice, count);
+            return ResponseEntity.ok("교환 정보가 업데이트되었습니다.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {

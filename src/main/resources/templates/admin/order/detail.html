@@ -414,7 +414,7 @@
                 </button>
               </div>
             </td>
-            <td style="position: relative;">
+            <td style="position: relative">
               <select
                 class="status-select"
                 th:data-item-id="${item.id}"
@@ -482,10 +482,13 @@
                 type="button"
                 class="exchange-btn"
                 th:data-item-id="${item.id}"
+                th:data-item-product-id="${item.productId}"
+                th:data-item-product-name="${item.productName}"
                 th:data-item-count="${item.count}"
+                th:data-item-price="${item.orderPrice}"
                 th:data-item-status="${item.status.name()}"
-                onclick="openSplitModalFromButton(this)"
-                title="상품 분리 (부분 반품/교환)"
+                onclick="openExchangeModalFromButton(this)"
+                title="상품 교환 정보 수정"
               >
                 교환
               </button>
@@ -502,12 +505,57 @@
         </tbody>
       </table>
 
-      <div class="total-price">
-        총 결제금액:
-        <span id="final-total-price" th:data-base-total="${order.totalPrice}"
-          th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')} + '원'"
-          >15,000원</span
+      <div
+        class="total-price"
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 30px;
+        "
+      >
+        <div
+          id="shortage-amount-container"
+          style="
+            display: none;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 20px;
+          "
         >
+          추가 결제(차액):
+          <span id="shortage-amount">0원</span>
+        </div>
+         <div
+           id="refund-amount-container"
+           style="
+             display: none;
+             color: #ff9800;
+             font-weight: bold;
+             font-size: 20px;
+           "
+         >
+           환불 금액:
+           <span id="refund-amount">0원</span>
+         </div>
+        <div style="color: #6b7280; font-weight: bold; font-size: 20px">
+          사전 결제 금액:
+          <span
+            id="prepaid-amount"
+            th:text="${order.originalTotalPrice != null ? #numbers.formatInteger(order.originalTotalPrice, 0, 'COMMA') : #numbers.formatInteger(order.totalPrice, 0, 'COMMA')} + '원'"
+            >15,000원</span
+          >
+        </div>
+        <div>
+          총 결제금액:
+          <span
+            id="final-total-price"
+            th:data-base-total="${order.totalPrice}"
+            th:data-backend-difference="${order.differenceAmount}"
+            th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')} + '원'"
+            >15,000원</span
+          >
+        </div>
       </div>
 
       <div style="text-align: center">
@@ -530,7 +578,15 @@
               required
               onchange="validateSplitCount()"
             />
-            <span id="split-count-hint" style="font-size: 12px; color: #666; margin-top: 4px; display: block;"></span>
+            <span
+              id="split-count-hint"
+              style="
+                font-size: 12px;
+                color: #666;
+                margin-top: 4px;
+                display: block;
+              "
+            ></span>
           </div>
           <div class="modal-form-group">
             <label for="split-status">상태 선택</label>
@@ -546,11 +602,55 @@
             </select>
           </div>
           <div class="modal-buttons">
-            <button type="button" class="modal-btn modal-btn-cancel" onclick="closeSplitModal()">
+            <button
+              type="button"
+              class="modal-btn modal-btn-cancel"
+              onclick="closeSplitModal()"
+            >
               취소
             </button>
             <button type="submit" class="modal-btn modal-btn-confirm">
               분리하기
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 교환 모달 -->
+    <div class="modal-overlay" id="exchangeModal">
+      <div class="modal">
+        <div class="modal-title">상품 교환 정보 수정</div>
+        <form id="exchangeForm" onsubmit="handleExchangeSubmit(event)">
+          <input type="hidden" id="exchange-item-id" />
+          <input type="hidden" id="exchange-product-id" />
+          <div class="modal-form-group">
+            <label for="exchange-product-name">상품명</label>
+            <input
+              type="text"
+              id="exchange-product-name"
+              required
+              placeholder="상품명을 입력하세요"
+            />
+          </div>
+          <div class="modal-form-group">
+            <label for="exchange-price">단가</label>
+            <input type="number" id="exchange-price" min="0" required />
+          </div>
+          <div class="modal-form-group">
+            <label for="exchange-count">수량</label>
+            <input type="number" id="exchange-count" min="1" required />
+          </div>
+          <div class="modal-buttons">
+            <button
+              type="button"
+              class="modal-btn modal-btn-cancel"
+              onclick="closeExchangeModal()"
+            >
+              취소
+            </button>
+            <button type="submit" class="modal-btn modal-btn-confirm">
+              수정하기
             </button>
           </div>
         </form>
@@ -572,16 +672,18 @@
             row.style.display = "none";
           }
         });
-        
+
         // 총 결제 금액 재계산
         updateFinalTotalPrice();
       }
 
       // 수량 변경 함수
       function changeItemQuantity(itemId, change) {
-        const quantityInput = document.getElementById(`quantity-item-${itemId}`);
+        const quantityInput = document.getElementById(
+          `quantity-item-${itemId}`
+        );
         const currentQty = parseInt(quantityInput.value);
-        
+
         let newQty = currentQty + change;
         if (newQty < 1) {
           newQty = 1;
@@ -592,7 +694,7 @@
 
       // 직접 입력 시 수량 업데이트
       function updateItemQuantityDirect(input) {
-        const itemId = input.getAttribute('data-item-id');
+        const itemId = input.getAttribute("data-item-id");
         const newQty = parseInt(input.value);
 
         let validQty = newQty;
@@ -606,9 +708,15 @@
 
       // OrderItem 수량 업데이트 API 호출
       function updateItemQuantity(itemId, newQuantity) {
-        const quantityInput = document.getElementById(`quantity-item-${itemId}`);
-        const itemPriceElement = document.getElementById(`item-total-price-${itemId}`);
-        const itemPrice = parseInt(itemPriceElement.getAttribute('data-item-price'));
+        const quantityInput = document.getElementById(
+          `quantity-item-${itemId}`
+        );
+        const itemPriceElement = document.getElementById(
+          `item-total-price-${itemId}`
+        );
+        const itemPrice = parseInt(
+          itemPriceElement.getAttribute("data-item-price")
+        );
 
         fetch(`/admin/orders/items/${itemId}/count`, {
           method: "PATCH",
@@ -616,107 +724,191 @@
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            count: newQuantity
+            count: newQuantity,
+          }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              // 수량 업데이트
+              quantityInput.value = newQuantity;
+              itemPriceElement.setAttribute("data-item-count", newQuantity);
+
+              // 해당 상품의 총 가격 업데이트
+              const newTotalPrice = itemPrice * newQuantity;
+              itemPriceElement.textContent =
+                new Intl.NumberFormat("ko-KR").format(newTotalPrice) + "원";
+
+              // 총 결제 금액 재계산
+              updateFinalTotalPrice();
+            } else {
+              return response.text().then((errorMessage) => {
+                alert(errorMessage || "수량 변경에 실패했습니다.");
+                location.reload();
+              });
+            }
           })
-        })
-        .then((response) => {
-          if (response.ok) {
-            // 수량 업데이트
-            quantityInput.value = newQuantity;
-            itemPriceElement.setAttribute('data-item-count', newQuantity);
-
-            // 해당 상품의 총 가격 업데이트
-            const newTotalPrice = itemPrice * newQuantity;
-            itemPriceElement.textContent = new Intl.NumberFormat('ko-KR').format(newTotalPrice) + '원';
-
-            // 총 결제 금액 재계산
-            updateFinalTotalPrice();
-          } else {
-            return response.text().then(errorMessage => {
-              alert(errorMessage || "수량 변경에 실패했습니다.");
-              location.reload();
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          alert("시스템 오류가 발생했습니다.");
-          location.reload();
-        });
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("시스템 오류가 발생했습니다.");
+            location.reload();
+          });
       }
 
       // 총 결제 금액 재계산 (반품/취소 상품 제외)
       function updateFinalTotalPrice() {
         let total = 0;
 
-        document.querySelectorAll('.order-item-row').forEach(row => {
+        document.querySelectorAll(".order-item-row").forEach((row) => {
           // 숨겨진 행은 제외
-          if (row.style.display === 'none') {
+          if (row.style.display === "none") {
             return;
           }
 
-          const itemStatus = row.getAttribute('data-item-status');
-          const itemPriceElement = row.querySelector('[id^="item-total-price-"]');
-          
+          const itemStatus = row.getAttribute("data-item-status");
+          const itemPriceElement = row.querySelector(
+            '[id^="item-total-price-"]'
+          );
+
           if (itemPriceElement) {
             // 현재 표시된 금액 사용 (수량 변경 후 반영된 값)
-            const currentPriceText = itemPriceElement.textContent.replace(/[^0-9]/g, '');
+            const currentPriceText = itemPriceElement.textContent.replace(
+              /[^0-9]/g,
+              ""
+            );
             const currentPrice = parseInt(currentPriceText) || 0;
-            
+
             // RETURNED 또는 CANCEL 상태인 경우 총액에서 제외
-            if (itemStatus !== 'RETURNED' && itemStatus !== 'CANCEL') {
+            if (itemStatus !== "RETURNED" && itemStatus !== "CANCEL") {
               total += currentPrice;
             }
           }
         });
 
         // 총 결제 금액 업데이트
-        document.getElementById('final-total-price').textContent = 
-          new Intl.NumberFormat('ko-KR').format(total) + '원';
+        document.getElementById("final-total-price").textContent =
+          new Intl.NumberFormat("ko-KR").format(total) + "원";
+
+        // 미수/환불 금액 계산 및 표시
+        updateShortageOrRefundAmount(total);
+      }
+
+      // 미수 금액 또는 환불 금액 계산 및 표시
+      function updateShortageOrRefundAmount(finalTotal) {
+        const prepaidAmountText = document
+          .getElementById("prepaid-amount")
+          .textContent.replace(/[^0-9]/g, "");
+        const prepaidAmount = parseInt(prepaidAmountText) || 0;
+
+        const difference = prepaidAmount - finalTotal; // 사전 결제 금액 - 총 결제 금액
+
+        const shortageContainer = document.getElementById(
+          "shortage-amount-container"
+        );
+        const refundContainer = document.getElementById(
+          "refund-amount-container"
+        );
+        const shortageAmount = document.getElementById("shortage-amount");
+        const refundAmount = document.getElementById("refund-amount");
+
+        // 기존 표시 숨기기
+        shortageContainer.style.display = "none";
+        refundContainer.style.display = "none";
+
+        if (difference < 0) {
+          // 음수: 미수 금액 (더 받아야 할 금액)
+          const shortage = Math.abs(difference);
+          shortageAmount.textContent =
+            new Intl.NumberFormat("ko-KR").format(shortage) + "원";
+          shortageContainer.style.display = "block";
+        } else if (difference > 0) {
+          // 양수: 환불 금액 (돌려줘야 할 금액)
+          refundAmount.textContent =
+            new Intl.NumberFormat("ko-KR").format(difference) + "원";
+          refundContainer.style.display = "block";
+        }
+        // difference === 0일 경우 둘 다 숨김
       }
 
       // 페이지 로드 시 초기 총액 계산
-      document.addEventListener('DOMContentLoaded', function() {
-        updateFinalTotalPrice();
+      document.addEventListener("DOMContentLoaded", function () {
+        // 백엔드에서 계산한 차액/환불 금액을 초기값으로 설정
+        const finalTotalPriceElement = document.getElementById("final-total-price");
+        const backendDifference = parseInt(finalTotalPriceElement.getAttribute("data-backend-difference")) || 0;
+        const prepaidAmountText = document.getElementById("prepaid-amount").textContent.replace(/[^0-9]/g, "");
+        const prepaidAmount = parseInt(prepaidAmountText) || 0;
+        const finalTotalPriceText = finalTotalPriceElement.textContent.replace(/[^0-9]/g, "");
+        const finalTotalPrice = parseInt(finalTotalPriceText) || 0;
+        
+        // 백엔드 값으로 차액/환불 금액 초기 표시
+        updateShortageOrRefundAmountFromBackend(prepaidAmount, finalTotalPrice, backendDifference);
       });
+      
+      // 백엔드에서 계산한 차액/환불 금액을 표시
+      function updateShortageOrRefundAmountFromBackend(prepaidAmount, finalTotal, difference) {
+        const shortageContainer = document.getElementById("shortage-amount-container");
+        const refundContainer = document.getElementById("refund-amount-container");
+        const shortageAmount = document.getElementById("shortage-amount");
+        const refundAmount = document.getElementById("refund-amount");
+        
+        // 기존 표시 숨기기
+        shortageContainer.style.display = "none";
+        refundContainer.style.display = "none";
+        
+        if (difference < 0) {
+          // 음수: 추가 결제 (차액)
+          const shortage = Math.abs(difference);
+          shortageAmount.textContent = new Intl.NumberFormat("ko-KR").format(shortage) + "원";
+          shortageContainer.style.display = "block";
+        } else if (difference > 0) {
+          // 양수: 환불 금액
+          refundAmount.textContent = new Intl.NumberFormat("ko-KR").format(difference) + "원";
+          refundContainer.style.display = "block";
+        }
+        // difference === 0일 경우 둘 다 숨김
+      }
 
       // 분리 모달 관련 함수
       function openSplitModalFromButton(buttonElement) {
-        const itemId = buttonElement.getAttribute('data-item-id');
-        const maxCount = parseInt(buttonElement.getAttribute('data-item-count'));
-        const currentStatus = buttonElement.getAttribute('data-item-status');
+        const itemId = buttonElement.getAttribute("data-item-id");
+        const maxCount = parseInt(
+          buttonElement.getAttribute("data-item-count")
+        );
+        const currentStatus = buttonElement.getAttribute("data-item-status");
         openSplitModal(itemId, maxCount, currentStatus);
       }
 
       function openSplitModal(itemId, maxCount, currentStatus) {
-        document.getElementById('split-item-id').value = itemId;
-        const splitCountInput = document.getElementById('split-count');
+        document.getElementById("split-item-id").value = itemId;
+        const splitCountInput = document.getElementById("split-count");
         splitCountInput.max = maxCount - 1; // 최대 수량은 현재 수량 - 1
         splitCountInput.value = 1;
         updateSplitCountHint(maxCount);
         // 현재 상품의 상태를 기본값으로 설정
-        const statusSelect = document.getElementById('split-status');
-        if (currentStatus && statusSelect.querySelector(`option[value="${currentStatus}"]`)) {
+        const statusSelect = document.getElementById("split-status");
+        if (
+          currentStatus &&
+          statusSelect.querySelector(`option[value="${currentStatus}"]`)
+        ) {
           statusSelect.value = currentStatus;
         } else {
-          statusSelect.value = '';
+          statusSelect.value = "";
         }
-        document.getElementById('splitModal').classList.add('show');
+        document.getElementById("splitModal").classList.add("show");
       }
 
       function closeSplitModal() {
-        document.getElementById('splitModal').classList.remove('show');
+        document.getElementById("splitModal").classList.remove("show");
       }
 
       function validateSplitCount() {
-        const splitCountInput = document.getElementById('split-count');
+        const splitCountInput = document.getElementById("split-count");
         const maxCount = parseInt(splitCountInput.max);
         const currentCount = parseInt(splitCountInput.value);
         updateSplitCountHint(maxCount + 1);
-        
+
         if (currentCount > maxCount) {
           splitCountInput.value = maxCount;
-          alert('분리할 수량은 현재 수량보다 작아야 합니다.');
+          alert("분리할 수량은 현재 수량보다 작아야 합니다.");
         }
         if (currentCount < 1) {
           splitCountInput.value = 1;
@@ -724,65 +916,148 @@
       }
 
       function updateSplitCountHint(maxCount) {
-        const hint = document.getElementById('split-count-hint');
-        const splitCountInput = document.getElementById('split-count');
+        const hint = document.getElementById("split-count-hint");
+        const splitCountInput = document.getElementById("split-count");
         const currentValue = parseInt(splitCountInput.value) || 1;
         hint.textContent = `(최대 ${splitCountInput.max}개, 현재 수량: ${maxCount}개)`;
       }
 
       function handleSplitSubmit(event) {
         event.preventDefault();
-        
-        const itemId = document.getElementById('split-item-id').value;
-        const splitCount = parseInt(document.getElementById('split-count').value);
-        const status = document.getElementById('split-status').value;
-        
+
+        const itemId = document.getElementById("split-item-id").value;
+        const splitCount = parseInt(
+          document.getElementById("split-count").value
+        );
+        const status = document.getElementById("split-status").value;
+
         if (!status) {
-          alert('상태를 선택해주세요.');
+          alert("상태를 선택해주세요.");
           return;
         }
 
-        if (!confirm(`상품을 ${splitCount}개 분리하여 상태를 "${status}"로 변경하시겠습니까?`)) {
+        if (
+          !confirm(
+            `상품을 ${splitCount}개 분리하여 상태를 "${status}"로 변경하시겠습니까?`
+          )
+        ) {
           return;
         }
 
         fetch(`/admin/orders/items/${itemId}/split`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             splitCount: splitCount,
-            status: status
+            status: status,
+          }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              alert("상품이 분리되었습니다.");
+              location.reload();
+            } else {
+              return response.text().then((errorMessage) => {
+                alert(errorMessage || "분리에 실패했습니다.");
+              });
+            }
           })
-        })
-        .then(response => {
-          if (response.ok) {
-            alert('상품이 분리되었습니다.');
-            location.reload();
-          } else {
-            return response.text().then(errorMessage => {
-              alert(errorMessage || '분리에 실패했습니다.');
-            });
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('시스템 오류가 발생했습니다.');
-        });
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("시스템 오류가 발생했습니다.");
+          });
       }
 
       // 모달 외부 클릭 시 닫기
-      document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('splitModal');
-        if (modal) {
-          modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
+      document.addEventListener("DOMContentLoaded", function () {
+        const splitModal = document.getElementById("splitModal");
+        if (splitModal) {
+          splitModal.addEventListener("click", function (e) {
+            if (e.target === splitModal) {
               closeSplitModal();
             }
           });
         }
+        const exchangeModal = document.getElementById("exchangeModal");
+        if (exchangeModal) {
+          exchangeModal.addEventListener("click", function (e) {
+            if (e.target === exchangeModal) {
+              closeExchangeModal();
+            }
+          });
+        }
       });
+
+      // 교환 모달 관련 함수
+      function openExchangeModalFromButton(buttonElement) {
+        const itemId = buttonElement.getAttribute("data-item-id");
+        const productId = buttonElement.getAttribute("data-item-product-id");
+        const productName = buttonElement.getAttribute(
+          "data-item-product-name"
+        );
+        const count = parseInt(buttonElement.getAttribute("data-item-count"));
+        const price = parseInt(buttonElement.getAttribute("data-item-price"));
+
+        document.getElementById("exchange-item-id").value = itemId;
+        document.getElementById("exchange-product-id").value = productId; // 숨겨진 필드에 productId 저장
+        document.getElementById("exchange-product-name").value =
+          productName || "";
+        document.getElementById("exchange-price").value = price;
+        document.getElementById("exchange-count").value = count;
+        document.getElementById("exchangeModal").classList.add("show");
+      }
+
+      function closeExchangeModal() {
+        document.getElementById("exchangeModal").classList.remove("show");
+      }
+
+      function handleExchangeSubmit(event) {
+        event.preventDefault();
+
+        const itemId = document.getElementById("exchange-item-id").value;
+        const productName = document.getElementById(
+          "exchange-product-name"
+        ).value;
+        const price = parseInt(document.getElementById("exchange-price").value);
+        const count = parseInt(document.getElementById("exchange-count").value);
+
+        if (!productName || productName.trim() === "") {
+          alert("상품명을 입력해주세요.");
+          return;
+        }
+
+        if (!confirm(`교환 정보를 수정하시겠습니까?`)) {
+          return;
+        }
+
+        fetch(`/admin/orders/items/${itemId}/exchange`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            productName: productName.trim(),
+            orderPrice: price,
+            count: count,
+          }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              alert("교환 정보가 수정되었습니다.");
+              location.reload();
+            } else {
+              return response.text().then((errorMessage) => {
+                alert(errorMessage || "교환 정보 수정에 실패했습니다.");
+              });
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("시스템 오류가 발생했습니다.");
+          });
+      }
 
       function updateOrderItemStatus(selectElement) {
         const itemId = selectElement.getAttribute("data-item-id");
@@ -801,20 +1076,20 @@
           .then((response) => {
             if (response.ok) {
               // 상태 업데이트 후 행의 data-item-status 속성도 업데이트
-              const row = selectElement.closest('.order-item-row');
-              row.setAttribute('data-item-status', newStatus);
-              
+              const row = selectElement.closest(".order-item-row");
+              row.setAttribute("data-item-status", newStatus);
+
               alert("상품 상태가 변경되었습니다.");
-              
+
               // 상태가 EXCHANGE로 변경된 경우 페이지 새로고침하여 버튼이 자연스럽게 변경되도록
-              if (newStatus === 'EXCHANGE') {
+              if (newStatus === "EXCHANGE") {
                 location.reload();
                 return;
               }
-              
+
               // 총 결제 금액 재계산
               updateFinalTotalPrice();
-              
+
               // 필터가 적용되어 있다면 필터링도 다시 적용
               filterOrderItems();
             } else {

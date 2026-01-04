@@ -49,6 +49,8 @@ public class Order extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private BagType bagType; // 봉투 타입
 
+    private Integer originalTotalPrice; // 주문 생성 시점의 원래 총 결제 금액 (사전 결제 금액)
+
     // 주문 상품들 (1:N 관계)
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
@@ -81,6 +83,10 @@ public class Order extends BaseTimeEntity {
         for (OrderItem orderItem : orderItems) {
             order.addOrderItem(orderItem);
         }
+        
+        // 주문 생성 시점의 원래 총 결제 금액 저장
+        order.originalTotalPrice = order.getTotalPrice();
+        
         return order;
     }
 

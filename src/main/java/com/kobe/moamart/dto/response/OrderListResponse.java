@@ -23,6 +23,7 @@ public class OrderListResponse {
     private String recipientName; // 주문자 (수령인)
     private String productSummary; // 상품명 요약 (예: 고래밥 외 2건)
     private int totalPrice; // 총 주문금액 (원래 주문 금액)
+    private Integer originalTotalPrice; // 주문 생성 시점의 원래 총 결제 금액 (사전 결제 금액)
     private OrderStatus status; // 주문 상태
     private LocalDateTime orderDate; // 주문 시간
     private LocalDateTime pickupDateTime; // 픽업 예정 일시
@@ -31,11 +32,13 @@ public class OrderListResponse {
     private int returnedAmount; // 반품 금액 (상품 상태가 RETURNED인 상품들의 총액)
     private int cancelAmount; // 취소 금액 (상품 상태가 CANCEL인 상품들의 총액)
     private int finalPaymentAmount; // 총 결제 금액 (반품/취소 제외한 실제 결제 금액)
+    private int differenceAmount; // 차액/환불 금액 (사전 결제 금액 - 총 결제 금액, 양수면 환불, 음수면 추가 결제)
 
     public OrderListResponse(Order order) {
         this.id = order.getId();
         this.recipientName = order.getRecipientName();
         this.totalPrice = order.getTotalPrice();
+        this.originalTotalPrice = order.getOriginalTotalPrice();
         this.status = order.getStatus();
         this.orderDate = order.getOrderDate();
         this.pickupDateTime = order.getPickupDateTime();
@@ -70,5 +73,9 @@ public class OrderListResponse {
             // 총 결제 금액 = 원래 주문 금액 - 반품 금액 - 취소 금액
             this.finalPaymentAmount = this.totalPrice - this.returnedAmount - this.cancelAmount;
         }
+        
+        // 차액/환불 금액 계산 (사전 결제 금액 - 총 결제 금액)
+        int prepaidAmount = (this.originalTotalPrice != null) ? this.originalTotalPrice : this.totalPrice;
+        this.differenceAmount = prepaidAmount - this.finalPaymentAmount;
     }
 }

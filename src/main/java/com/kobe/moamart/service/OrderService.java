@@ -188,4 +188,35 @@ public class OrderService {
         // 원본 Item도 저장 (수량이 변경되었으므로)
         orderItemRepository.save(originalItem);
     }
+
+    /**
+     * 관리자용: 주문 상품(OrderItem) 교환 정보 업데이트
+     * 상품명, 단가, 수량을 변경할 수 있음
+     */
+    @Transactional
+    public void updateOrderItemExchange(Long orderItemId, String productName, int orderPrice, int count) {
+        OrderItem orderItem = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new IllegalArgumentException("주문 상품을 찾을 수 없습니다."));
+
+        if (orderItem.getStatus() != OrderStatus.EXCHANGE) {
+            throw new IllegalArgumentException("상품 상태가 교환(EXCHANGE)이 아닙니다.");
+        }
+
+        // 상품명으로 상품 찾기
+        Product product = productRepository.findByName(productName)
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다: " + productName));
+
+        if (count < 1) {
+            throw new IllegalArgumentException("수량은 최소 1개 이상이어야 합니다.");
+        }
+
+        if (orderPrice < 0) {
+            throw new IllegalArgumentException("가격은 0 이상이어야 합니다.");
+        }
+
+        // 상품, 가격, 수량 변경
+        orderItem.changeProduct(product);
+        orderItem.changeOrderPrice(orderPrice);
+        orderItem.changeCount(count);
+    }
 }

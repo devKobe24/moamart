@@ -32,4 +32,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, Product
 
     // 메인 페이지용: 특정 카테고리의 노출 상품만 조회
     Page<Product> findByCategoryIdAndIsDisplayedTrueOrderByIdDesc(Long categoryId, Pageable pageable);
+
+    // 상품명으로 상품 찾기 (교환 시 사용)
+    java.util.Optional<Product> findByName(String name);
 }

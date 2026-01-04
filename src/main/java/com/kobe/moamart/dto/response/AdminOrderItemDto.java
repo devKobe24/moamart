@@ -18,6 +18,7 @@ import lombok.Getter;
 @Getter
 public class AdminOrderItemDto {
     private Long id; // OrderItem ID
+    private Long productId; // Product ID
     private String productName;
     private int count;
     private int orderPrice; // 주문 당시 가격
@@ -26,6 +27,7 @@ public class AdminOrderItemDto {
 
     public AdminOrderItemDto(OrderItem orderItem) {
         this.id = orderItem.getId();
+        this.productId = orderItem.getProduct().getId();
         this.productName = orderItem.getProduct().getName();
         this.count = orderItem.getCount();
         this.orderPrice = orderItem.getOrderPrice();

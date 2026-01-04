@@ -32,6 +32,8 @@ public class AdminOrderDetailResponse {
 
     // 결제 정보
     private int totalPrice;
+    private Integer originalTotalPrice; // 주문 생성 시점의 원래 총 결제 금액 (사전 결제 금액)
+    private int differenceAmount; // 차액/환불 금액 (사전 결제 금액 - 총 결제 금액, 양수면 환불, 음수면 추가 결제)
 
     // 픽업 시간 정보
     private LocalDateTime pickupDateTime;
@@ -47,7 +49,12 @@ public class AdminOrderDetailResponse {
         this.phoneNumber = order.getPhoneNumber();
         this.deliveryAddress = order.getDeliveryAddress();
         this.totalPrice = order.getTotalPrice();
+        this.originalTotalPrice = order.getOriginalTotalPrice();
         this.pickupDateTime = order.getPickupDateTime();
+        
+        // 차액/환불 금액 계산 (사전 결제 금액 - 총 결제 금액)
+        int prepaidAmount = (this.originalTotalPrice != null) ? this.originalTotalPrice : this.totalPrice;
+        this.differenceAmount = prepaidAmount - this.totalPrice;
 
         this.orderItems = order.getOrderItems().stream()
                 .map(AdminOrderItemDto::new)

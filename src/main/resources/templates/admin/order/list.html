@@ -119,6 +119,7 @@
             >
               주문완료
             </option>
+            주문 관리 리스트
             <option
               value="PREPARING"
               th:selected="${selectedStatus?.name() == 'PREPARING'}"
@@ -186,8 +187,8 @@
             <th style="width: 10%">픽업 예정 일시</th>
             <th style="width: 7%">주문자</th>
             <th style="width: 18%">상품 정보</th>
-            <th style="width: 8%">결제금액</th>
-            <th style="width: 8%">반품 금액</th>
+            <th style="width: 8%">사전 결제 금액</th>
+            <th style="width: 8%">차액/환불 금액</th>
             <th style="width: 8%">취소 금액</th>
             <th style="width: 8%">총 결제 금액</th>
             <th style="width: 12%">상태 변경</th>
@@ -208,10 +209,7 @@
             >
               2024-01-01 14:00
             </td>
-            <td
-              th:unless="${order.pickupDateTime != null}"
-              style="color: #999;"
-            >
+            <td th:unless="${order.pickupDateTime != null}" style="color: #999">
               -
             </td>
             <td th:text="${order.recipientName}">홍길동</td>
@@ -222,39 +220,38 @@
               고래밥 외 2건
             </td>
             <td
-              th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')} + '원'"
+              th:text="${order.originalTotalPrice != null ? #numbers.formatInteger(order.originalTotalPrice, 0, 'COMMA') : #numbers.formatInteger(order.totalPrice, 0, 'COMMA')} + '원'"
             >
               15,000원
             </td>
-            <td
-              th:if="${order.returnedAmount > 0}"
-              style="color: #d32f2f;"
-              th:text="'-' + ${#numbers.formatInteger(order.returnedAmount, 0, 'COMMA')} + '원'"
-            >
-              -5,000원
-            </td>
-            <td
-              th:unless="${order.returnedAmount > 0}"
-              style="color: #999;"
-            >
-              -
+            <td th:with="diff=${order.differenceAmount}">
+              <span
+                th:if="${diff > 0}"
+                style="color: #ff9800; font-weight: bold"
+                th:text="'-' + ${#numbers.formatInteger(diff, 0, 'COMMA')} + '원'"
+              >
+                -1,000원
+              </span>
+              <span
+                th:if="${diff < 0}"
+                style="color: #28a745; font-weight: bold"
+                th:text="'+' + ${#numbers.formatInteger(-diff, 0, 'COMMA')} + '원'"
+              >
+                +1,000원
+              </span>
+              <span th:if="${diff == 0}" style="color: #999"> - </span>
             </td>
             <td
               th:if="${order.cancelAmount > 0}"
-              style="color: #d32f2f;"
+              style="color: #d32f2f"
               th:text="'-' + ${#numbers.formatInteger(order.cancelAmount, 0, 'COMMA')} + '원'"
             >
               -3,000원
             </td>
-            <td
-              th:unless="${order.cancelAmount > 0}"
-              style="color: #999;"
-            >
-              -
-            </td>
+            <td th:unless="${order.cancelAmount > 0}" style="color: #999">-</td>
             <td
               th:text="${#numbers.formatInteger(order.finalPaymentAmount, 0, 'COMMA')} + '원'"
-              style="font-weight: bold; color: #007bff;"
+              style="font-weight: bold; color: #007bff"
             >
               12,000원
             </td>
@@ -282,6 +279,12 @@
                   th:selected="${order.status.name() == 'READY_FOR_PICKUP'}"
                 >
                   상품준비완료
+                </option>
+                <option
+                  value="PICKUP_COMPLETED"
+                  th:selected="${selectedStatus?.name() == 'PICKUP_COMPLETED'}"
+                >
+                  픽업완료
                 </option>
                 <option
                   value="RETURNED"
