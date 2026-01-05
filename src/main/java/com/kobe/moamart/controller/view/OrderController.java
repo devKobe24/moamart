@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -162,10 +163,31 @@ public class OrderController {
     }
 
     /**
-     * 3. 주문 완료 페이지 (GET)
+     * 주문 완료 페이지 (GET)
      */
     @GetMapping("/orders/complete")
     public String orderComplete() {
         return "order/complete"; // templates/order/complete.html
+    }
+
+    /**
+     * 주문 내역 페이지 (사용자용)
+     */
+    @GetMapping("/orders")
+    public String orderList(Model model) {
+        // 모든 주문 목록 조회 (사용자별 필터링은 추후 인증 기능과 연동 시 추가)
+        var orders = orderService.getOrderList(null);
+        model.addAttribute("orders", orders);
+        return "orders/list"; // templates/orders/list.html
+    }
+
+    /**
+     * 고객용 주문 상세 페이지
+     */
+    @GetMapping("/orders/{id}")
+    public String orderDetail(@PathVariable Long id, Model model) {
+        var orderDetail = orderService.getOrderDetailForCustomer(id);
+        model.addAttribute("order", orderDetail);
+        return "orders/detail"; // templates/orders/detail.html
     }
 }

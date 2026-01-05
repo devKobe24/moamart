@@ -1062,6 +1062,8 @@
       function updateOrderItemStatus(selectElement) {
         const itemId = selectElement.getAttribute("data-item-id");
         const newStatus = selectElement.value;
+        const row = selectElement.closest(".order-item-row");
+        const oldStatus = row.getAttribute("data-item-status");
 
         if (!confirm(`상품 상태를 변경하시겠습니까?`)) {
           location.reload(); // 취소 시 원래 값 복구
@@ -1076,13 +1078,13 @@
           .then((response) => {
             if (response.ok) {
               // 상태 업데이트 후 행의 data-item-status 속성도 업데이트
-              const row = selectElement.closest(".order-item-row");
               row.setAttribute("data-item-status", newStatus);
 
               alert("상품 상태가 변경되었습니다.");
 
-              // 상태가 EXCHANGE로 변경된 경우 페이지 새로고침하여 버튼이 자연스럽게 변경되도록
-              if (newStatus === "EXCHANGE") {
+              // EXCHANGE 상태와 관련된 변경(EXCHANGE로 변경되거나 EXCHANGE에서 다른 상태로 변경)인 경우 페이지 새로고침
+              // 이렇게 하면 분리/교환 버튼이 올바르게 표시됨
+              if (oldStatus === "EXCHANGE" || newStatus === "EXCHANGE") {
                 location.reload();
                 return;
               }

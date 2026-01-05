@@ -55,6 +55,31 @@
         background-color: #0056b3;
         color: white;
       }
+      .menu a.cart-btn {
+        background-color: #28a745;
+        color: white;
+        padding: 8px 20px;
+        position: relative;
+      }
+      .menu a.cart-btn:hover {
+        background-color: #218838;
+        color: white;
+      }
+      .cart-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+      }
       .logout-btn {
         background-color: #6c757d;
         color: white;
@@ -200,6 +225,14 @@
     <div class="navbar">
       <a href="/" class="logo">🛍️ Moamart</a>
       <div class="menu">
+        <a href="/cart" class="cart-btn" style="position: relative;">
+          🛒 장바구니
+          <span th:if="${cartItemCount > 0}" class="cart-badge" th:text="${cartItemCount}">0</span>
+        </a>
+        <!-- 로그인된 경우 주문 내역 버튼 표시 -->
+        <a href="/orders" sec:authorize="isAuthenticated()" style="background-color: #ff9800; color: white; font-size: 14px; padding: 8px 16px; border-radius: 4px; transition: all 0.2s; text-decoration: none;">
+          📋 주문 내역
+        </a>
         <!-- 로그인되지 않은 경우 -->
         <div sec:authorize="!isAuthenticated()">
           <a href="/join">회원가입</a>

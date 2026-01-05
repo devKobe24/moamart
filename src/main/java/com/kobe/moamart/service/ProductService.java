@@ -117,27 +117,27 @@ public class ProductService {
     }
 
     /**
-     * 메인 페이지 최신 상품 조회 (isNew가 true인 상품만)
+     * 메인 페이지 최신 상품 조회 (isNew가 true이고 상태가 STOP이 아닌 상품만)
      */
     public Page<ProductListResponse> getNewProducts(Long categoryId, Pageable pageable) {
         if (categoryId != null) {
-            return productRepository.findByCategoryIdAndIsDisplayedTrueAndIsNewTrueOrderByIdDesc(categoryId, pageable)
+            return productRepository.findByCategoryIdAndIsDisplayedTrueAndIsNewTrueAndStatusNotOrderByIdDesc(categoryId, ProductStatus.STOP, pageable)
                     .map(ProductListResponse::new);
         } else {
-            return productRepository.findAllByIsDisplayedTrueAndIsNewTrueOrderByIdDesc(pageable)
+            return productRepository.findAllByIsDisplayedTrueAndIsNewTrueAndStatusNotOrderByIdDesc(ProductStatus.STOP, pageable)
                     .map(ProductListResponse::new);
         }
     }
 
     /**
-     * 메인 페이지 전체 상품 조회 (isDisplayed가 true인 모든 상품)
+     * 메인 페이지 전체 상품 조회 (isDisplayed가 true이고 상태가 STOP이 아닌 모든 상품)
      */
     public Page<ProductListResponse> getAllProducts(Long categoryId, Pageable pageable) {
         if (categoryId != null) {
-            return productRepository.findByCategoryIdAndIsDisplayedTrueOrderByIdDesc(categoryId, pageable)
+            return productRepository.findByCategoryIdAndIsDisplayedTrueAndStatusNotOrderByIdDesc(categoryId, ProductStatus.STOP, pageable)
                     .map(ProductListResponse::new);
         } else {
-        return productRepository.findAllByIsDisplayedTrueOrderByIdDesc(pageable)
+        return productRepository.findAllByIsDisplayedTrueAndStatusNotOrderByIdDesc(ProductStatus.STOP, pageable)
                 .map(ProductListResponse::new);
         }
     }

@@ -12,6 +12,7 @@ import com.kobe.moamart.domain.store.entity.Store;
 import com.kobe.moamart.domain.store.repository.StoreRepository;
 import com.kobe.moamart.dto.cart.CartItem;
 import com.kobe.moamart.dto.response.AdminOrderDetailResponse;
+import com.kobe.moamart.dto.response.OrderDetailResponse;
 import com.kobe.moamart.dto.response.OrderListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -121,12 +122,27 @@ public class OrderService {
 
     /**
      * 관리자용: 주문 상태 변경
+     * 주문 상태가 ORDER, PREPARING, READY_FOR_PICKUP, PICKUP_COMPLETED일 때는
+     * 주문 상세 정보의 상품 상태도 함께 변경됩니다.
+     * 그 외 상태(RETURNED, EXCHANGE, OUT_OF_STOCK, CANCEL)는 주문 상태만 변경됩니다.
      */
     @Transactional
     public void updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
         order.changeStatus(status);
+        
+        // 특정 상태일 때는 OrderItem의 상태도 함께 변경
+        if (status == OrderStatus.ORDER || 
+            status == OrderStatus.PREPARING || 
+            status == OrderStatus.READY_FOR_PICKUP || 
+            status == OrderStatus.PICKUP_COMPLETED) {
+            // 주문의 모든 OrderItem 상태를 주문 상태와 동일하게 변경
+            for (OrderItem orderItem : order.getOrderItems()) {
+                orderItem.changeStatus(status);
+            }
+        }
+        // 그 외 상태(RETURNED, EXCHANGE, OUT_OF_STOCK, CANCEL)는 주문 상태만 변경
     }
 
     /**
@@ -136,6 +152,15 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
         return new AdminOrderDetailResponse(order);
+    }
+
+    /**
+     * 고객용: 주문 상세 정보 조회
+     */
+    public OrderDetailResponse getOrderDetailForCustomer(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
+        return new OrderDetailResponse(order);
     }
 
     /**
@@ -203,7 +228,7 @@ public class OrderService {
         }
 
         // 상품명으로 상품 찾기
-        Product product = productRepository.findByName(productName)
+        Product newProduct = productRepository.findByName(productName)
                 .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다: " + productName));
 
         if (count < 1) {
@@ -214,8 +239,30 @@ public class OrderService {
             throw new IllegalArgumentException("가격은 0 이상이어야 합니다.");
         }
 
+        // 기존 상품과 새 상품
+        Product oldProduct = orderItem.getProduct();
+        int oldCount = orderItem.getCount();
+
+        // 재고 관리: 기존 상품의 재고 반환, 새 상품의 재고 차감
+        if (!oldProduct.getId().equals(newProduct.getId())) {
+            // 상품이 변경된 경우: 기존 상품 재고 반환, 새 상품 재고 차감
+            oldProduct.addStock(oldCount);
+            newProduct.removeStock(count);
+        } else {
+            // 같은 상품인 경우: 수량 차이만 반영
+            int countDifference = count - oldCount;
+            if (countDifference > 0) {
+                // 수량이 증가한 경우: 재고 차감
+                newProduct.removeStock(countDifference);
+            } else if (countDifference < 0) {
+                // 수량이 감소한 경우: 재고 반환
+                newProduct.addStock(Math.abs(countDifference));
+            }
+            // countDifference == 0인 경우 재고 변경 없음
+        }
+
         // 상품, 가격, 수량 변경
-        orderItem.changeProduct(product);
+        orderItem.changeProduct(newProduct);
         orderItem.changeOrderPrice(orderPrice);
         orderItem.changeCount(count);
     }

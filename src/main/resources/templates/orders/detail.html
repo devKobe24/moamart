@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>주문 상세 정보</title>
+    <style>
+      body {
+        font-family: "Apple SD Gothic Neo", sans-serif;
+        background-color: #f4f6f8;
+        padding: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      h1 {
+        border-bottom: 2px solid #333;
+        padding-bottom: 15px;
+        font-size: 22px;
+        margin-bottom: 30px;
+      }
+      h2 {
+        font-size: 18px;
+        color: #555;
+        margin-bottom: 10px;
+        margin-top: 30px;
+      }
+
+      .info-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      .info-table th {
+        width: 120px;
+        background: #f8f9fa;
+        text-align: left;
+        padding: 10px;
+        border: 1px solid #eee;
+        color: #555;
+      }
+      .info-table td {
+        padding: 10px;
+        border: 1px solid #eee;
+      }
+
+      .item-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      .item-table th,
+      .item-table td {
+        border-bottom: 1px solid #eee;
+        padding: 12px;
+        text-align: center;
+      }
+      .item-table th {
+        background-color: #f1f3f5;
+      }
+
+      .total-price {
+        text-align: right;
+        font-size: 20px;
+        font-weight: bold;
+        color: #d32f2f;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 2px solid #333;
+      }
+
+      .btn-list {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        margin-top: 20px;
+      }
+      .btn-list:hover {
+        background-color: #5a6268;
+      }
+
+      .navbar {
+        background-color: white;
+        padding: 15px 30px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+      }
+      .logo {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <a href="/" class="logo">🛍️ Moamart</a>
+      <div>
+        <a href="/orders" style="text-decoration: none; color: #555; margin-right: 15px;">주문 내역</a>
+        <a href="/" style="text-decoration: none; color: #555">홈으로</a>
+      </div>
+    </div>
+
+    <div class="container">
+      <h1>
+        📄 주문 상세 정보
+        <span
+          style="font-size: 14px; color: #888; font-weight: normal"
+          th:text="'(Order #' + ${order.id} + ')'"
+        ></span>
+      </h1>
+
+      <h2>배송 정보</h2>
+      <table class="info-table">
+        <tr>
+          <th>받는 분</th>
+          <td th:text="${order.recipientName}">홍길동</td>
+        </tr>
+        <tr>
+          <th>연락처</th>
+          <td th:text="${order.phoneNumber}">010-1234-5678</td>
+        </tr>
+        <tr th:if="${order.deliveryAddress != null}">
+          <th>주소</th>
+          <td th:text="${order.deliveryAddress}">서울시 강남구...</td>
+        </tr>
+        <tr>
+          <th>주문 상태</th>
+          <td>
+            <span th:switch="${order.status.name()}">
+              <span th:case="'ORDER'">주문완료</span>
+              <span th:case="'PREPARING'">상품준비중</span>
+              <span th:case="'READY_FOR_PICKUP'">상품준비완료</span>
+              <span th:case="'PICKUP_COMPLETED'">픽업완료</span>
+              <span th:case="'RETURNED'">반품완료</span>
+              <span th:case="'EXCHANGE'">상품교환</span>
+              <span th:case="'OUT_OF_STOCK'">품절</span>
+              <span th:case="'CANCEL'">주문취소</span>
+              <span th:case="*" th:text="${order.status}">ORDER</span>
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <th>주문 일시</th>
+          <td
+            th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm:ss')}"
+          >
+            2024-01-01
+          </td>
+        </tr>
+        <tr th:if="${order.pickupDateTime != null}">
+          <th>픽업 예정 일시</th>
+          <td
+            th:text="${#temporals.format(order.pickupDateTime, 'yyyy-MM-dd HH:mm')}"
+          >
+            2024-01-01 14:00
+          </td>
+        </tr>
+        <tr th:if="${order.storeName != null}">
+          <th>픽업 매장</th>
+          <td th:text="${order.storeName}">매장명</td>
+        </tr>
+      </table>
+
+      <h2>주문 상품</h2>
+      <table class="item-table">
+        <thead>
+          <tr>
+            <th>상품명</th>
+            <th>단가</th>
+            <th>수량</th>
+            <th>상품 상태</th>
+            <th>금액</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="item : ${order.orderItems}">
+            <td th:text="${item.productName}" style="text-align: left">
+              고래밥
+            </td>
+            <td
+              th:text="${#numbers.formatInteger(item.orderPrice, 0, 'COMMA')}"
+            >
+              1,000
+            </td>
+            <td th:text="${item.count}">2</td>
+            <td>
+              <span th:switch="${item.status.name()}">
+                <span th:case="'ORDER'">주문완료</span>
+                <span th:case="'PREPARING'">상품준비중</span>
+                <span th:case="'READY_FOR_PICKUP'">상품준비완료</span>
+                <span th:case="'PICKUP_COMPLETED'">픽업완료</span>
+                <span th:case="'RETURNED'">반품완료</span>
+                <span th:case="'EXCHANGE'">상품교환</span>
+                <span th:case="'OUT_OF_STOCK'">품절</span>
+                <span th:case="'CANCEL'">주문취소</span>
+                <span th:case="*" th:text="${item.status}">ORDER</span>
+              </span>
+            </td>
+            <td
+              th:text="${#numbers.formatInteger(item.orderPrice * item.count, 0, 'COMMA')} + '원'"
+            >
+              2,000원
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="total-price">
+        총 결제금액:
+        <span
+          th:text="${#numbers.formatInteger(order.totalPrice, 0, 'COMMA')} + '원'"
+          >15,000원</span
+        >
+      </div>
+
+      <div style="text-align: center">
+        <a href="/orders" class="btn-list">주문 내역으로 돌아가기</a>
+      </div>
+    </div>
+  </body>
+</html>
+
