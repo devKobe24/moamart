@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.2.0'
+    id 'org.springframework.boot' version '3.3.5'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -15,8 +15,7 @@ java {
 }
 
 bootJar {
-    archiveBaseName = 'moa-mart'
-    archiveVersion = '1.0.1'
+    archiveFileName = 'moa-mart-1.0.1.jar'
 }
 
 repositories {
