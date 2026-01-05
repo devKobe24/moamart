@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -30,8 +31,13 @@ public class LocalFileUploader implements FileUploader {
 
     @Override
     public String upload(MultipartFile file) {
+        return upload(file, false);
+    }
+
+    @Override
+    public String upload(MultipartFile file, boolean isThumbnail) {
         if (file.isEmpty()) {
-            return null; // or throw Exception
+            return null;
         }
 
         try {
@@ -41,18 +47,88 @@ public class LocalFileUploader implements FileUploader {
                 directory.mkdirs();
             }
 
-            // 2. 파일명 중복 방지 (UUID)
-            String originalFilename = file.getOriginalFilename();
-            String storeFilename = UUID.randomUUID() + "_" + originalFilename;
+            // 2. 이미지 최적화 (리사이징 및 압축)
+            byte[] optimizedImageBytes;
+            String extension = ".jpg";
+            
+            if (ImageOptimizer.isImageFile(file)) {
+                optimizedImageBytes = ImageOptimizer.optimizeImage(file, isThumbnail);
+                
+                // 확장자 결정
+                String originalFilename = file.getOriginalFilename();
+                if (originalFilename != null && originalFilename.contains(".")) {
+                    String originalExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                    if (originalExtension.equalsIgnoreCase(".png")) {
+                        extension = ".png";
+                    }
+                }
+            } else {
+                // 이미지가 아닌 경우 원본 그대로
+                optimizedImageBytes = file.getBytes();
+                String originalFilename = file.getOriginalFilename();
+                if (originalFilename != null && originalFilename.contains(".")) {
+                    extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                }
+            }
+
+            // 3. 파일명 중복 방지 (UUID)
+            String storeFilename = UUID.randomUUID() + extension;
             String fullPath = uploadDir + storeFilename;
 
-            // 3. 파일 저장
-            file.transferTo(new File(fullPath));
+            // 4. 최적화된 파일 저장
+            try (FileOutputStream fos = new FileOutputStream(fullPath)) {
+                fos.write(optimizedImageBytes);
+            }
 
-            // 4. 웹 접근 URL 반환 (/images/파일명)
+            // 5. 웹 접근 URL 반환 (/images/파일명)
             return "/images/" + storeFilename;
         } catch (IOException e) {
             throw new RuntimeException("파일 저장 실패: " + file.getOriginalFilename(), e);
         }
+    }
+
+    @Override
+    public void delete(String url) {
+        if (url == null || url.isEmpty()) {
+            return;
+        }
+
+        try {
+            // URL에서 파일명 추출 (/images/파일명 -> 파일명)
+            String filename = extractFilenameFromUrl(url);
+            
+            if (filename == null || filename.isEmpty()) {
+                return; // 유효하지 않은 URL이면 무시
+            }
+
+            // 파일 삭제
+            String fullPath = uploadDir + filename;
+            File file = new File(fullPath);
+            
+            if (file.exists()) {
+                boolean deleted = file.delete();
+                if (!deleted) {
+                    System.err.println("파일 삭제 실패: " + fullPath);
+                }
+            }
+        } catch (Exception e) {
+            // 삭제 실패해도 로그만 남기고 예외는 던지지 않음 (무시)
+            System.err.println("로컬 파일 삭제 실패: " + url + ", 오류: " + e.getMessage());
+        }
+    }
+
+    /**
+     * URL에서 파일명 추출
+     * /images/파일명 -> 파일명
+     */
+    private String extractFilenameFromUrl(String url) {
+        if (url.startsWith("/images/")) {
+            return url.substring("/images/".length());
+        }
+        // 전체 경로가 URL에 포함된 경우
+        if (url.contains("/images/")) {
+            return url.substring(url.lastIndexOf("/images/") + "/images/".length());
+        }
+        return null;
     }
 }

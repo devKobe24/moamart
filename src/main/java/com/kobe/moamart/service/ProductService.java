@@ -74,10 +74,10 @@ public class ProductService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
 
-        // 2. 대표 이미지 업로드 처리
+        // 2. 대표 이미지 업로드 처리 (썸네일로 작은 크기로 리사이징)
         String thumbnailUrl = null;
-        if (request.getThumbnailImage() != null && !request.getProductImages().isEmpty()) {
-            thumbnailUrl = fileUploader.upload(request.getThumbnailImage());
+        if (request.getThumbnailImage() != null && !request.getThumbnailImage().isEmpty()) {
+            thumbnailUrl = fileUploader.upload(request.getThumbnailImage(), true); // true = 썸네일
         }
 
         // 3. 상품 Entity 생성 및 저장
@@ -206,7 +206,12 @@ public class ProductService {
 
         // 5. 대표 이미지 업로드 처리 (새 이미지가 있는 경우만)
         if (request.getThumbnailImage() != null && !request.getThumbnailImage().isEmpty()) {
-            String thumbnailUrl = fileUploader.upload(request.getThumbnailImage());
+            // 기존 썸네일 이미지 삭제
+            if (product.getThumbnailUrl() != null) {
+                fileUploader.delete(product.getThumbnailUrl());
+            }
+            
+            String thumbnailUrl = fileUploader.upload(request.getThumbnailImage(), true); // true = 썸네일
             product.changeThumbnail(thumbnailUrl);
         }
 
@@ -228,5 +233,29 @@ public class ProductService {
         }
 
         // @Transactional에 의해 자동으로 업데이트됨 (명시적으로 save 호출 불필요)
+    }
+
+    /**
+     * 상품 삭제 (이미지 파일도 함께 삭제)
+     */
+    @Transactional
+    public void deleteProduct(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + id));
+
+        // 1. 썸네일 이미지 삭제
+        if (product.getThumbnailUrl() != null) {
+            fileUploader.delete(product.getThumbnailUrl());
+        }
+
+        // 2. 상세 이미지들 삭제
+        for (ProductImage image : product.getImages()) {
+            if (image.getUrl() != null) {
+                fileUploader.delete(image.getUrl());
+            }
+        }
+
+        // 3. DB에서 상품 삭제 (Cascade 설정으로 이미지도 함께 삭제됨)
+        productRepository.delete(product);
     }
 }

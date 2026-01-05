@@ -47,6 +47,19 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     implementation 'org.springframework.boot:spring-boot-starter-validation' // 유효성 검사
+    
+    // 7. AWS S3 (운영 환경 이미지 업로드용)
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.529'
+    
+    // 8. AWS Secrets Manager (운영 환경 자격 증명 관리용)
+    implementation 'com.amazonaws:aws-java-sdk-secretsmanager:1.12.529'
+    
+    // 9. 이미지 처리 (리사이징, 최적화)
+    implementation 'net.coobird:thumbnailator:0.4.20'
+
+    // 10. Spring Cloud AWS
+    implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:3.0.0')
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
 
     // 6. Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
