@@ -16,7 +16,7 @@ java {
 
 bootJar {
     archiveBaseName = 'moa-mart'
-    archiveVersion = '0.0.1'
+    archiveVersion = '1.0.1'
 }
 
 repositories {
