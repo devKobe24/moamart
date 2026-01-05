@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.5'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'application'
 }
 
 group = 'com.kobe.moamart'
@@ -15,7 +16,7 @@ java {
 }
 
 bootJar {
-    archiveFileName = 'moa-mart-1.0.1.jar'
+    archiveFileName = 'moa-mart-1.0.2.jar'
 }
 
 repositories {
