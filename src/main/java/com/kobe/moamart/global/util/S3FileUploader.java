@@ -28,6 +28,8 @@ import java.util.UUID;
  * author         : kobe
  * date           : 2025. 12. 29.
  * description    : AWS S3를 사용한 파일 업로드 (운영 환경용)
+ *                   - 버킷: moamart-product-images-bucket
+ *                   - 저장 경로: images/ 디렉토리 안에 모든 상품 이미지 저장
  */
 @Component
 @Profile("prod") // 운영 환경(prod)에서만 활성화
@@ -115,7 +117,8 @@ public class S3FileUploader implements FileUploader {
 
             String storeFilename = UUID.randomUUID() + extension;
 
-            // 3. S3에 저장할 경로
+            // 3. S3에 저장할 경로: moamart-product-images-bucket/images/파일명
+            // images/ 디렉토리 안에 모든 상품 이미지 저장
             String s3Key = "images/" + storeFilename;
 
             // 4. 메타데이터 설정
