@@ -1,15 +1,14 @@
 package com.kobe.moamart.global.util;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.kobe.moamart.global.config.AwsSecretsManagerService;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.kobe.moamart.global.config.AwsSecretsManagerService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -31,6 +30,7 @@ import java.util.UUID;
  *                   - 버킷: moamart-product-images-bucket
  *                   - 저장 경로: images/ 디렉토리 안에 모든 상품 이미지 저장
  */
+@Slf4j
 @Component
 @Profile("prod") // 운영 환경(prod)에서만 활성화
 public class S3FileUploader implements FileUploader {
@@ -49,37 +49,14 @@ public class S3FileUploader implements FileUploader {
         this.bucketName = bucketName;
         this.cloudfrontUrl = cloudfrontUrl;
 
-        // Secrets Manager에서 자격 증명 가져오기
-        String accessKey;
-        String secretKey;
-        
-        try {
-            accessKey = secretsManagerService.getSecretValue(secretName, "accessKey");
-            secretKey = secretsManagerService.getSecretValue(secretName, "secretKey");
-        } catch (Exception e) {
-            // Secrets Manager 사용 실패 시 환경 변수에서 가져오기 (하위 호환성)
-            System.err.println("Secrets Manager에서 자격 증명을 가져오는데 실패했습니다. 환경 변수를 사용합니다: " + e.getMessage());
-            accessKey = System.getenv("AWS_ACCESS_KEY_ID");
-            secretKey = System.getenv("AWS_SECRET_ACCESS_KEY");
-            
-            if (accessKey == null || secretKey == null) {
-                // 환경 변수도 없으면 DefaultAWSCredentialsProviderChain 사용 (EC2 IAM 역할 등)
-                this.s3Client = AmazonS3ClientBuilder.standard()
-                        .withRegion(region)
-                        .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
-                        .build();
-                return;
-            }
-        }
-
-        // AWS 자격 증명 설정
-        BasicAWSCredentials awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
-
-        // S3 클라이언트 생성
+        // IAM 역할 사용 (Secrets Manager에서 자격 증명을 찾지 않음)
+        // DefaultAWSCredentialsProviderChain이 자동으로 EC2 IAM 역할을 사용
         this.s3Client = AmazonS3ClientBuilder.standard()
                 .withRegion(region)
-                .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+                .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
                 .build();
+
+        log.info("S3 클라이언트가 EC2 IAM 역할을 사용하여 초기화되었습니다.");
     }
 
     @Override
