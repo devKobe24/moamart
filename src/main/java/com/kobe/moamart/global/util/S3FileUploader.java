@@ -3,11 +3,9 @@ package com.kobe.moamart.global.util;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.kobe.moamart.global.config.AwsSecretsManagerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -42,9 +40,7 @@ public class S3FileUploader implements FileUploader {
     public S3FileUploader(
             @Value("${aws.s3.bucket-name}") String bucketName,
             @Value("${aws.s3.region}") String region,
-            @Value("${aws.secrets-manager.secret-name:moamart/aws-credentials}") String secretName,
-            @Value("${aws.s3.cloudfront-url:}") String cloudfrontUrl,
-            AwsSecretsManagerService secretsManagerService
+            @Value("${aws.s3.cloudfront-url:}") String cloudfrontUrl
     ) {
         this.bucketName = bucketName;
         this.cloudfrontUrl = cloudfrontUrl;
@@ -56,7 +52,7 @@ public class S3FileUploader implements FileUploader {
                 .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
                 .build();
 
-        log.info("S3 클라이언트가 EC2 IAM 역할을 사용하여 초기화되었습니다.");
+        log.info("S3 클라이언트가 EC2 IAM 역할을 사용하여 초기화되었습니다. 버킷: {}, 리전: {}", bucketName, region);
     }
 
     @Override
@@ -66,19 +62,29 @@ public class S3FileUploader implements FileUploader {
 
     @Override
     public String upload(MultipartFile file, boolean isThumbnail) {
-        if (file.isEmpty()) {
+        if (file == null || file.isEmpty()) {
+            log.warn("업로드할 파일이 비어있습니다.");
             return null;
         }
 
         try {
+            log.debug("이미지 업로드 시작: {}, 썸네일: {}", file.getOriginalFilename(), isThumbnail);
+            
             // 1. 이미지 최적화 (리사이징 및 압축)
             byte[] optimizedImageBytes;
             
             if (ImageOptimizer.isImageFile(file)) {
-                optimizedImageBytes = ImageOptimizer.optimizeImage(file, isThumbnail);
+                try {
+                    optimizedImageBytes = ImageOptimizer.optimizeImage(file, isThumbnail);
+                    log.debug("이미지 최적화 완료: {} bytes", optimizedImageBytes.length);
+                } catch (Exception e) {
+                    log.error("이미지 최적화 실패: {}", file.getOriginalFilename(), e);
+                    throw new RuntimeException("이미지 최적화 실패: " + file.getOriginalFilename(), e);
+                }
             } else {
                 // 이미지가 아닌 경우 원본 그대로
                 optimizedImageBytes = file.getBytes();
+                log.debug("이미지가 아니므로 원본 그대로 사용: {} bytes", optimizedImageBytes.length);
             }
 
             // 2. 고유한 파일명 생성 (UUID + 확장자)
@@ -97,32 +103,51 @@ public class S3FileUploader implements FileUploader {
             // 3. S3에 저장할 경로: moamart-product-images-bucket/images/파일명
             // images/ 디렉토리 안에 모든 상품 이미지 저장
             String s3Key = "images/" + storeFilename;
+            log.debug("S3 키: {}", s3Key);
 
             // 4. 메타데이터 설정
             ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType("image/jpeg".equals(file.getContentType()) || 
-                                   file.getContentType() == null ? "image/jpeg" : file.getContentType());
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                contentType = extension.equals(".png") ? "image/png" : "image/jpeg";
+            }
+            metadata.setContentType(contentType);
             metadata.setContentLength(optimizedImageBytes.length);
 
             // 5. S3에 최적화된 이미지 업로드
+            // ACL은 사용하지 않음 (버킷이 ACL을 허용하지 않을 수 있음)
+            // 대신 버킷 정책으로 공개 읽기 권한 관리
             try (InputStream inputStream = new ByteArrayInputStream(optimizedImageBytes)) {
                 PutObjectRequest putObjectRequest = new PutObjectRequest(
                         bucketName,
                         s3Key,
                         inputStream,
                         metadata
-                ).withCannedAcl(CannedAccessControlList.PublicRead); // 공개 읽기 권한
+                );
+                // ACL 제거: .withCannedAcl(CannedAccessControlList.PublicRead) 
+                // 버킷 정책으로 공개 읽기 권한 설정 필요
 
                 s3Client.putObject(putObjectRequest);
+                log.info("S3 업로드 성공: {}", s3Key);
+            } catch (Exception e) {
+                log.error("S3 업로드 실패: 버킷={}, 키={}", bucketName, s3Key, e);
+                throw new RuntimeException("S3 파일 업로드 실패: " + file.getOriginalFilename() + " (버킷: " + bucketName + ", 키: " + s3Key + ")", e);
             }
 
             // 6. 접근 가능한 URL 반환
+            String url;
             if (cloudfrontUrl != null && !cloudfrontUrl.isEmpty()) {
-                return cloudfrontUrl + (cloudfrontUrl.endsWith("/") ? "" : "/") + s3Key;
+                url = cloudfrontUrl + (cloudfrontUrl.endsWith("/") ? "" : "/") + s3Key;
             } else {
-                return s3Client.getUrl(bucketName, s3Key).toString();
+                url = s3Client.getUrl(bucketName, s3Key).toString();
             }
+            log.debug("업로드된 이미지 URL: {}", url);
+            return url;
         } catch (IOException e) {
+            log.error("파일 읽기 실패: {}", file.getOriginalFilename(), e);
+            throw new RuntimeException("S3 파일 업로드 실패: " + file.getOriginalFilename(), e);
+        } catch (Exception e) {
+            log.error("S3 파일 업로드 중 예상치 못한 오류 발생: {}", file.getOriginalFilename(), e);
             throw new RuntimeException("S3 파일 업로드 실패: " + file.getOriginalFilename(), e);
         }
     }
