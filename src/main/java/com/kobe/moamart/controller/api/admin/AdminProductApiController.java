@@ -32,4 +32,10 @@ public class AdminProductApiController {
         productService.updateStatus(id, request.getStatus());
         return ResponseEntity.ok().build(); // 200 OK 반환 (Body 없음)
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+        return ResponseEntity.ok().build(); // 200 OK 반환 (Body 없음)
+    }
 }

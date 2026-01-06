@@ -129,6 +129,7 @@
       <div class="header-row">
         <h1>📦 상품 관리</h1>
         <div style="display: flex; gap: 10px; align-items: center;">
+          <a href="/" style="background-color: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; transition: 0.2s;">🏠 메인으로</a>
           <a href="/admin/orders" style="background-color: #ff6b35; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; transition: 0.2s;">🚚 주문 관리</a>
           <a href="/admin/stores" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; transition: 0.2s;">🏪 매장 관리</a>
           <a href="/admin/products/add" style="background-color: #007BFF; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; transition: 0.2s;">🎁 상품 등록</a>
@@ -274,19 +275,39 @@
             </td>
 
             <td>
-              <a
-                th:href="@{/admin/products/{id}/edit(id=${item.id})}"
-                style="
-                  display: inline-block;
-                  padding: 4px 8px;
-                  background-color: #007bff;
-                  color: white;
-                  text-decoration: none;
-                  border-radius: 4px;
-                  cursor: pointer;
-                "
-                >수정</a
-              >
+              <div style="display: flex; gap: 5px; justify-content: center;">
+                <a
+                  th:href="@{/admin/products/{id}/edit(id=${item.id})}"
+                  style="
+                    display: inline-block;
+                    padding: 4px 8px;
+                    background-color: #007bff;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                  "
+                  >수정</a
+                >
+                <button
+                  type="button"
+                  th:data-id="${item.id}"
+                  th:data-name="${item.name}"
+                  onclick="deleteProduct(this)"
+                  style="
+                    display: inline-block;
+                    padding: 4px 8px;
+                    background-color: #dc3545;
+                    color: white;
+                    text-decoration: none;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                  "
+                >
+                  삭제
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -354,6 +375,37 @@
         .forEach((el) => {
           el.setAttribute("data-original-value", el.value);
         });
+
+      // 상품 삭제 함수
+      function deleteProduct(buttonElement) {
+        const productId = buttonElement.getAttribute("data-id");
+        const productName = buttonElement.getAttribute("data-name");
+
+        // 사용자 확인
+        if (!confirm(`정말로 '${productName}' 상품을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, DB와 S3의 모든 데이터가 삭제됩니다.`)) {
+          return;
+        }
+
+        // API 호출
+        fetch(`/api/admin/products/${productId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => {
+            if (response.ok) {
+              alert("상품이 삭제되었습니다.");
+              location.reload(); // 페이지 새로고침
+            } else {
+              alert("삭제 실패! 서버 오류가 발생했습니다.");
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("네트워크 오류가 발생했습니다.");
+          });
+      }
     </script>
   </body>
 </html>
