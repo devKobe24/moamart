@@ -122,12 +122,7 @@ java -jar -Dspring.profiles.active=prod build/libs/moamart-0.0.1-SNAPSHOT.jar
 - 🏠 **메인 페이지**: http://localhost:8080
 - 🔧 **관리자 페이지**: http://localhost:8080/admin/login
 - 💾 **H2 콘솔** (개발 환경): http://localhost:8080/h2-console
-- 😀 **운영 페이지: ** https://www.moa-mart.com
-
-### 🔑 기본 관리자 계정
-
-- **아이디**: `admin`
-- **비밀번호**: `1234`
+- 😀 **운영 페이지:** https://www.moa-mart.com
 
 ---
 
