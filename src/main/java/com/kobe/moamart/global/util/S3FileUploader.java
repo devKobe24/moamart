@@ -141,7 +141,8 @@ public class S3FileUploader implements FileUploader {
             } else {
                 url = s3Client.getUrl(bucketName, s3Key).toString();
             }
-            log.debug("업로드된 이미지 URL: {}", url);
+            log.info("업로드된 이미지 URL: {}", url);
+            log.info("이미지 접근 테스트: 브라우저에서 다음 URL을 직접 열어보세요: {}", url);
             return url;
         } catch (IOException e) {
             log.error("파일 읽기 실패: {}", file.getOriginalFilename(), e);
