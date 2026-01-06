@@ -29,6 +29,7 @@ import java.util.List;
 public class Product extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "product_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -1,5 +1,6 @@
 package com.kobe.moamart.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
@@ -26,8 +27,10 @@ import java.time.LocalDateTime;
 public class BaseTimeEntity {
 
     @CreatedDate
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }
