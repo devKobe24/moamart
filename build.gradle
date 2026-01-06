@@ -16,7 +16,7 @@ java {
 }
 
 bootJar {
-    archiveFileName = 'moa-mart-1.0.3.jar'
+    archiveFileName = 'moa-mart-1.0.4.jar'
 }
 
 repositories {
