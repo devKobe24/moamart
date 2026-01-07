@@ -115,6 +115,13 @@
         justify-content: center;
         max-width: 1200px;
         margin: 0 auto;
+        position: relative;
+      }
+      
+      /* 드롭다운 메뉴 */
+      .category-dropdown {
+        position: relative;
+        display: inline-block;
       }
       .category-item {
         padding: 8px 16px;
@@ -126,6 +133,8 @@
         text-decoration: none;
         transition: all 0.2s;
         white-space: nowrap;
+        cursor: pointer;
+        display: inline-block;
       }
       .category-item:hover {
         background-color: #007bff;
@@ -138,6 +147,62 @@
         background-color: #007bff;
         color: white;
         border-color: #007bff;
+        font-weight: bold;
+      }
+      
+      /* 드롭다운 콘텐츠 */
+      .dropdown-content {
+        display: none;
+        position: absolute;
+        top: calc(100% - 8px); /* 부모 요소와 겹치게 설정하여 간격 제거 */
+        left: 0;
+        background-color: white;
+        min-width: 200px;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        border-radius: 0 0 8px 8px; /* 상단 모서리는 둥글지 않게 */
+        padding-top: 12px; /* 상단에 충분한 공간 확보 (마우스 이동 공간) */
+        padding-bottom: 8px;
+        border: 1px solid #dee2e6;
+        margin-top: 0; /* margin 제거 */
+      }
+      .category-dropdown:hover .dropdown-content,
+      .category-dropdown.active .dropdown-content {
+        display: block;
+      }
+      
+      /* 드롭다운이 열려있을 때 부모 요소와의 연결 유지 */
+      .category-dropdown:hover {
+        z-index: 1001;
+      }
+      
+      /* 드롭다운의 첫 번째 아이템 위에 추가 공간 (::before 가상 요소) */
+      .dropdown-content::before {
+        content: '';
+        display: block;
+        height: 8px;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: transparent;
+      }
+      .dropdown-item {
+        display: block;
+        padding: 10px 20px;
+        color: #495057;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+      }
+      .dropdown-item:hover {
+        background-color: #f8f9fa;
+        color: #007bff;
+        padding-left: 25px;
+      }
+      .dropdown-item.active {
+        background-color: #e7f3ff;
+        color: #007bff;
         font-weight: bold;
       }
 
@@ -258,126 +323,39 @@
           th:classappend="${selectedCategory == null} ? 'active' : ''"
           >전체</a
         >
-        <a
-          href="/?category=주류"
-          class="category-item"
-          th:classappend="${selectedCategory == '주류'} ? 'active' : ''"
-          >주류</a
+        
+        <!-- 대분류 드롭다운 메뉴 -->
+        <div 
+          class="category-dropdown" 
+          th:each="parentCategory : ${parentCategories}"
+          th:if="${!parentCategory.children.isEmpty()}"
         >
+          <span 
+            class="category-item"
+            th:classappend="${selectedCategory == parentCategory.name} ? 'active' : ''"
+            th:text="${parentCategory.name}"
+          >대분류</span>
+          <div class="dropdown-content">
+            <!-- 소분류 카테고리 링크 -->
+            <a
+              th:each="childCategory : ${parentCategory.children}"
+              th:href="@{/(category=${childCategory.name})}"
+              class="dropdown-item"
+              th:classappend="${selectedCategory == childCategory.name} ? 'active' : ''"
+              th:text="${childCategory.name}"
+            >소분류</a>
+          </div>
+        </div>
+        
+        <!-- 소분류가 없는 대분류는 일반 링크로 표시 (예: 주류) -->
         <a
-          href="/?category=정육"
+          th:each="parentCategory : ${parentCategories}"
+          th:if="${parentCategory.children.isEmpty()}"
+          th:href="@{/(category=${parentCategory.name})}"
           class="category-item"
-          th:classappend="${selectedCategory == '정육'} ? 'active' : ''"
-          >정육</a
-        >
-        <a
-          href="/?category=채소"
-          class="category-item"
-          th:classappend="${selectedCategory == '채소'} ? 'active' : ''"
-          >채소</a
-        >
-        <a
-          th:href="@{/(category='빵 • 잼')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '빵 • 잼'} ? 'active' : ''"
-          >빵 • 잼</a
-        >
-        <a
-          th:href="@{/(category='우유 • 유제품')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '우유 • 유제품'} ? 'active' : ''"
-          >우유 • 유제품</a
-        >
-        <a
-          href="/?category=아이스크림"
-          class="category-item"
-          th:classappend="${selectedCategory == '아이스크림'} ? 'active' : ''"
-          >아이스크림</a
-        >
-        <a
-          th:href="@{/(category='음료 • 커피 • 생수')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '음료 • 커피 • 생수'} ? 'active' : ''"
-          >음료 • 커피 • 생수</a
-        >
-        <a
-          th:href="@{/(category='라면 • 면')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '라면 • 면'} ? 'active' : ''"
-          >라면 • 면</a
-        >
-        <a
-          th:href="@{/(category='세제 • 방향 • 탈취')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '세제 • 방향 • 탈취'} ? 'active' : ''"
-          >세제 • 방향 • 탈취</a
-        >
-        <a
-          th:href="@{/(category='청소 • 욕실')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '청소 • 욕실'} ? 'active' : ''"
-          >청소 • 욕실</a
-        >
-        <a
-          href="/?category=즉석 밥"
-          class="category-item"
-          th:classappend="${selectedCategory == '즉석 밥'} ? 'active' : ''"
-          >즉석 밥</a
-        >
-        <a
-          th:href="@{/(category='쌀 • 잡곡 • 견과')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '쌀 • 잡곡 • 견과'} ? 'active' : ''"
-          >쌀 • 잡곡 • 견과</a
-        >
-        <a
-          th:href="@{/(category='햄 • 어묵 • 통조림')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '햄 • 어묵 • 통조림'} ? 'active' : ''"
-          >햄 • 어묵 • 통조림</a
-        >
-        <a
-          th:href="@{/(category='양념 • 장류 • 오일')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '양념 • 장류 • 오일'} ? 'active' : ''"
-          >양념 • 장류 • 오일</a
-        >
-        <a
-          th:href="@{/(category='요리 • 반찬')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '요리 • 반찬'} ? 'active' : ''"
-          >요리 • 반찬</a
-        >
-        <a
-          th:href="@{/(category='헤어 • 바디 • 쉐이빙')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '헤어 • 바디 • 쉐이빙'} ? 'active' : ''"
-          >헤어 • 바디 • 쉐이빙</a
-        >
-        <a
-          th:href="@{/(category='화장지 • 생리대')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '화장지 • 생리대'} ? 'active' : ''"
-          >화장지 • 생리대</a
-        >
-        <a
-          th:href="@{/(category='주방 • 일회용품')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '주방 • 일회용품'} ? 'active' : ''"
-          >주방 • 일회용품</a
-        >
-        <a
-          th:href="@{/(category='뷰티 • 클렌징')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '뷰티 • 클렌징'} ? 'active' : ''"
-          >뷰티 • 클렌징</a
-        >
-        <a
-          th:href="@{/(category='문구 • 사무용품')}"
-          class="category-item"
-          th:classappend="${selectedCategory == '문구 • 사무용품'} ? 'active' : ''"
-          >문구 • 사무용품</a
-        >
+          th:classappend="${selectedCategory == parentCategory.name} ? 'active' : ''"
+          th:text="${parentCategory.name}"
+        >대분류</a>
       </div>
     </div>
 

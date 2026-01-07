@@ -82,19 +82,67 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initCategoryAndProduct() {
-        // --- 대분류 카테고리 생성 (텍스트 파일 기준) ---
-        String[] categoryNames = {
-            "주류", "정육", "채소", "빵 • 잼", "우유 • 유제품",
-            "아이스크림", "음료 • 커피 • 생수", "라면 • 면", "세제 • 방향 • 탈취",
-            "청소 • 욕실", "즉석 밥", "쌀 • 잡곡 • 견과", "햄 • 어묵 • 통조림",
-            "양념 • 장류 • 오일", "요리 • 반찬", "헤어 • 바디 • 쉐이빙",
-            "화장지 • 생리대", "주방 • 일회용품", "뷰티 • 클렌징", "문구 • 사무용품"
-        };
+        // --- 대분류 카테고리 생성 ---
+        Category freshFood = createCategory("신선 식품", 1, 1, null);
+        Category processedFood = createCategory("가공 식품", 1, 2, null);
+        Category condimentsAndIngredients = createCategory("조미료 • 식재료", 1, 3, null);
+        Category beverages = createCategory("음료", 1, 4, null);
+        Category alcohol = createCategory("주류", 1, 5, null);
+        Category householdGoods = createCategory("생활용품", 1, 6, null);
+        Category beautyAndHygiene = createCategory("뷰티 • 위생", 1, 7, null);
+        Category stationeryAndOfficeSupplies = createCategory("문구 • 사무용품", 1, 8, null);
+        Category others = createCategory("기타", 1, 9, null);
 
-        for (int i = 0; i < categoryNames.length; i++) {
-            Category category = createCategory(categoryNames[i], 1, i + 1, null);
-            categoryRepository.save(category);
-        }
+        categoryRepository.save(freshFood);
+        categoryRepository.save(processedFood);
+        categoryRepository.save(condimentsAndIngredients);
+        categoryRepository.save(beverages);
+        categoryRepository.save(alcohol);
+        categoryRepository.save(householdGoods);
+        categoryRepository.save(beautyAndHygiene);
+        categoryRepository.save(stationeryAndOfficeSupplies);
+        categoryRepository.save(others);
+
+        // --- 소분류 카테고리 생성 ---
+        // 신선 식품의 소분류
+        categoryRepository.save(createCategory("정육", 2, 1, freshFood));
+        categoryRepository.save(createCategory("채소", 2, 2, freshFood));
+        categoryRepository.save(createCategory("우유 • 유제품", 2, 3, freshFood));
+
+        // 가공 식품의 소분류
+        categoryRepository.save(createCategory("라면 • 면", 2, 1, processedFood));
+        categoryRepository.save(createCategory("햄 • 어묵 • 통조림", 2, 2, processedFood));
+        categoryRepository.save(createCategory("아이스크림", 2, 3, processedFood));
+        categoryRepository.save(createCategory("빵 • 잼", 2, 4, processedFood));
+
+        // 조미료 • 식재료의 소분류
+        categoryRepository.save(createCategory("요리 • 반찬", 2, 1, condimentsAndIngredients));
+        categoryRepository.save(createCategory("양념 • 장류 • 오일", 2, 2, condimentsAndIngredients));
+        categoryRepository.save(createCategory("쌀 • 잡곡 • 견과", 2, 3, condimentsAndIngredients));
+
+        // 음료의 소분류
+        categoryRepository.save(createCategory("음료 • 커피 • 생수", 2, 1, beverages));
+
+        // 주류의 소분류
+        categoryRepository.save(createCategory("맥주",2, 1, alcohol));
+        categoryRepository.save(createCategory("소주",2, 2, alcohol));
+        categoryRepository.save(createCategory("막걸리",2, 3, alcohol));
+
+        // 생활용품의 소분류
+        categoryRepository.save(createCategory("세제 • 방향 • 탈취", 2, 1, householdGoods));
+        categoryRepository.save(createCategory("청소 • 욕실", 2, 2, householdGoods));
+        categoryRepository.save(createCategory("주방 • 일회용품", 2, 3, householdGoods));
+        categoryRepository.save(createCategory("화장지 • 생리대", 2, 4, householdGoods));
+
+        // 뷰티 • 위생의 소분류
+        categoryRepository.save(createCategory("헤어 • 바디 • 쉐이빙", 2, 1, beautyAndHygiene));
+        categoryRepository.save(createCategory("뷰티 • 클렌징", 2, 2, beautyAndHygiene));
+
+        // 문구 • 사무용품의 소분류
+        categoryRepository.save(createCategory("문구 • 사무용품", 2, 1, stationeryAndOfficeSupplies));
+
+        // 기타의 소분류
+        categoryRepository.save(createCategory("기타 용품", 2, 1, others));
 
         // 기존 상품 데이터는 제거 (필요시 나중에 추가)
     }

@@ -1,9 +1,11 @@
 package com.kobe.moamart.controller.view;
 
+import com.kobe.moamart.domain.category.Category;
 import com.kobe.moamart.domain.category.CategoryRepository;
 import com.kobe.moamart.dto.response.ProductDetailResponse;
 import com.kobe.moamart.dto.response.ProductListResponse;
 import com.kobe.moamart.service.CartService;
+import com.kobe.moamart.service.CategoryService;
 import com.kobe.moamart.service.ProductService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 
 /**
@@ -35,6 +39,7 @@ public class MainController {
     private final ProductService productService;
     private final CartService cartService;
     private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
 
     @GetMapping("/")
     public String home(
@@ -60,7 +65,13 @@ public class MainController {
         // 4. 장바구니 아이템 수 조회
         int cartItemCount = cartService.getCartFromSession(session).size();
 
-        // 5. 모델에 담기
+        // 5. 카테고리 계층 구조 조회 (대분류와 소분류)
+        // Service 레이어에서 @Transactional로 LAZY 로딩 처리
+        List<Category> parentCategories = categoryService.getParentCategoriesWithChildren();
+        
+        model.addAttribute("parentCategories", parentCategories);
+
+        // 6. 모델에 담기
         model.addAttribute("newProducts", newProducts);
         model.addAttribute("allProducts", allProducts);
         model.addAttribute("selectedCategory", category); // 선택된 카테고리 전달 (활성화 표시용)

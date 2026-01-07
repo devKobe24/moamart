@@ -74,6 +74,11 @@ public class ProductService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
 
+        // 1-1. 소분류(depth=2)만 허용 검증
+        if (!category.isSubCategory()) {
+            throw new IllegalArgumentException("상품은 소분류 카테고리에만 등록할 수 있습니다. 선택한 카테고리: " + category.getName());
+        }
+
         // 2. 대표 이미지 업로드 처리 (썸네일로 작은 크기로 리사이징)
         String thumbnailUrl = null;
         if (request.getThumbnailImage() != null && !request.getThumbnailImage().isEmpty()) {
@@ -183,6 +188,11 @@ public class ProductService {
         // 2. 카테고리 조회
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+
+        // 2-1. 소분류(depth=2)만 허용 검증
+        if (!category.isSubCategory()) {
+            throw new IllegalArgumentException("상품은 소분류 카테고리에만 등록할 수 있습니다. 선택한 카테고리: " + category.getName());
+        }
 
         // 3. 기본 정보 수정
         product.updateInfo(

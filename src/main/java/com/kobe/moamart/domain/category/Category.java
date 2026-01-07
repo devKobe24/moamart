@@ -51,4 +51,20 @@ public class Category extends BaseTimeEntity {
         this.displayOrder = displayOrder;
         this.parent = parent;
     }
+
+    /**
+     * 소분류인지 확인 (상품 등록 가능한 카테고리인지 확인)
+     * @return depth가 2이면 true
+     */
+    public boolean isSubCategory() {
+        return this.depth == 2;
+    }
+
+    /**
+     * 대분류인지 확인
+     * @return depth가 1이면 true
+     */
+    public boolean isMainCategory() {
+        return this.depth == 1;
+    }
 }
